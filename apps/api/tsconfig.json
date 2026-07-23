@@ -1,0 +1,9 @@
+{
+  "extends": "@clinum/config/typescript/nestjs.json",
+  "compilerOptions": {
+    "declaration": true,
+    "incremental": true,
+    "outDir": "./dist",
+    "baseUrl": "./"
+  }
+}

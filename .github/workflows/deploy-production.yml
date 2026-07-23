@@ -1,0 +1,113 @@
+name: Deploy - Production
+
+# =============================================================================
+# ATENÇÃO: este é o pipeline que afeta CLIENTES REAIS (dados de prontuário,
+# ficha de atendimento e financeiro de clínicas/estéticas/studios de verdade).
+# Dispara ao fazer merge em main, mas o job "deploy" só roda depois de
+# aprovação manual de um reviewer do environment "production" (configurado em
+# Settings > Environments no GitHub — ver CONTRIBUTING.md).
+# =============================================================================
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    name: Build & push das imagens Docker
+    runs-on: ubuntu-latest
+    outputs:
+      api-tags: ${{ steps.meta-api.outputs.tags }}
+      web-tags: ${{ steps.meta-web.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata da imagem da API
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}-api
+          tags: |
+            type=raw,value=production
+            type=sha,prefix=production-
+
+      - name: Build & push apps/api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Metadata da imagem do Web
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}-web
+          tags: |
+            type=raw,value=production
+            type=sha,prefix=production-
+
+      - name: Build & push apps/web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy via SSH + prisma migrate deploy (requer aprovação manual)
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    # Gate de aprovação manual: o job fica pendente até um reviewer
+    # cadastrado no environment "production" aprovar a execução.
+    environment:
+      name: production
+    steps:
+      # ---------------------------------------------------------------
+      # Servidor de produção (VPS única, Docker Compose) ainda não foi
+      # provisionado neste repositório — o caminho/arquivo compose abaixo
+      # é o esperado quando isso acontecer. Os secrets referenciados
+      # (PRODUCTION_SSH_HOST, PRODUCTION_SSH_USER, PRODUCTION_SSH_KEY)
+      # precisam ser cadastrados manualmente em Settings > Secrets and
+      # variables > Actions do repositório.
+      # ---------------------------------------------------------------
+      - name: Deploy no servidor de produção
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PRODUCTION_SSH_HOST }}
+          username: ${{ secrets.PRODUCTION_SSH_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/clinum/production
+            docker compose pull
+            docker compose up -d
+            # prisma migrate deploy roda sempre como parte do deploy,
+            # nunca manualmente.
+            docker compose exec -T api pnpm --filter @clinum/api prisma:migrate:deploy

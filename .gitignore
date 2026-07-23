@@ -1,0 +1,56 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# turbo
+.turbo/
+
+# build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# env - nunca versionar segredos reais, só .env.example
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# testing / coverage
+coverage/
+
+# segredos, chaves e certificados (SSH, TLS, etc.)
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# IDE / editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# prisma (bancos locais de dev, se algum dia usar sqlite)
+apps/api/prisma/*.db
+
+# overrides locais de docker-compose (podem conter config específica da máquina)
+docker-compose.override.yml

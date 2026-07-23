@@ -1,0 +1,126 @@
+name: CI
+
+# Roda em todo PR contra staging ou main. Nenhum destes jobs pode ser
+# removido/enfraquecido sem que a branch protection (ver CONTRIBUTING.md)
+# seja atualizada também.
+on:
+  pull_request:
+    branches:
+      - staging
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "10.33.0"
+
+jobs:
+  lint-test-build:
+    name: Lint, testes e build (Turborepo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # Cache do Turborepo entre execuções do workflow: tarefas cujo input
+      # (código/lockfile) não mudou são restauradas do cache em vez de
+      # rebuildadas/retestadas. `restore-keys` permite hit parcial mesmo
+      # quando o SHA muda.
+      - name: Cache do Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (apps/packages afetados)
+        run: pnpm turbo run lint
+
+      - name: Testes unitários e de integração
+        run: pnpm turbo run test
+
+      - name: Build
+        run: pnpm turbo run build
+
+  # ---------------------------------------------------------------------
+  # Job obrigatório: isolamento multi-tenant.
+  #
+  # A aplicação lida com dado sensível (prontuário/ficha de atendimento,
+  # financeiro) de múltiplas clínicas/estéticas/studios na mesma base de
+  # dados. Este job roda especificamente
+  # apps/api/test/tenant-isolation.e2e-spec.ts, o teste que garante que
+  # dado de um tenant nunca vaza para outro.
+  #
+  # ESTE JOB NÃO PODE SER REMOVIDO DO PIPELINE, mesmo que o arquivo de
+  # teste ainda esteja incompleto (hoje ele existe como placeholder com
+  # `it.todo`, ver o próprio arquivo). Se no futuro alguém apagar o
+  # arquivo ou remover este job "pra CI passar mais rápido", isso deve ser
+  # tratado como um problema de segurança, não como limpeza de pipeline.
+  # ---------------------------------------------------------------------
+  tenant-isolation:
+    name: Isolamento multi-tenant (obrigatório)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: clinum
+          POSTGRES_PASSWORD: clinum_ci
+          POSTGRES_DB: clinum_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U clinum"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: "postgresql://clinum:clinum_ci@localhost:5432/clinum_test?schema=public"
+      REDIS_URL: "redis://localhost:6379"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Gerar Prisma Client
+        run: pnpm --filter @clinum/api exec prisma generate
+
+      - name: Aplicar migrations no banco de teste
+        run: pnpm --filter @clinum/api exec prisma migrate deploy
+
+      - name: Rodar apps/api/test/tenant-isolation.e2e-spec.ts
+        run: pnpm --filter @clinum/api test:tenant-isolation

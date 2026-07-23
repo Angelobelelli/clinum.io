@@ -1,0 +1,51 @@
+{
+  "name": "clinum",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Clinum - SaaS multi-tenant para gestão de clínicas, estética e studios de beleza",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "lint-staged": {
+    "apps/api/**/*.ts": [
+      "pnpm --filter @clinum/api exec eslint --fix"
+    ],
+    "apps/web/**/*.{ts,tsx,js,jsx}": [
+      "pnpm --filter @clinum/web exec eslint --fix"
+    ],
+    "packages/shared-types/**/*.ts": [
+      "pnpm --filter @clinum/shared-types exec eslint --fix"
+    ],
+    "*.{ts,tsx,js,jsx,json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

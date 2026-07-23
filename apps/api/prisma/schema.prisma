@@ -1,0 +1,12 @@
+// Schema Prisma do Clinum.
+// Ainda sem modelos de negócio — apenas a configuração de datasource/generator,
+// apontando para o PostgreSQL definido em docker-compose.yml.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
