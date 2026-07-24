@@ -52,5 +52,8 @@ desktop.ini
 # prisma (bancos locais de dev, se algum dia usar sqlite)
 apps/api/prisma/*.db
 
+# prisma (cliente gerado pelo `prisma generate`, não versionar)
+apps/api/generated/
+
 # overrides locais de docker-compose (podem conter config específica da máquina)
 docker-compose.override.yml

@@ -1,98 +1,139 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Clinum API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API multi-tenant (NestJS) do Clinum. Este documento cobre a fundação de
+tenant + autenticação; funcionalidades de negócio (agenda, financeiro, etc.)
+ainda não existem.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Arquitetura de tenant
 
-## Description
+- **Banco compartilhado**: toda tabela de negócio terá uma coluna
+  `organizationId`. Nunca banco/schema separado por cliente.
+- **Auth + tenant**: [better-auth](https://www.better-auth.com/), plugin
+  `organization` (`apps/api/src/core/auth/auth.ts`). Cada empresa cliente é
+  uma `Organization`. Papéis: `owner`, `admin`, `member` (padrão do plugin) +
+  `staff` e `reception` (`apps/api/src/core/auth/access-control.ts`).
+- **Identificação do tenant**: pelo header `Host` da requisição — subdomínio
+  (`slug` da Organization) ou `customDomain`. Resolvido por
+  `TenantMiddleware` (`apps/api/src/core/tenant/tenant.middleware.ts`) e
+  guardado em `AsyncLocalStorage` (`tenant-context.ts`) para o resto do
+  request. Em `NODE_ENV=development`, o header `X-Tenant-Slug` sobrepõe a
+  resolução por Host (não há subdomínio real em localhost).
+- **Isolamento em duas camadas**:
+  1. Aplicação — `apps/api/src/core/database/prisma-tenant.extension.ts`
+     (Prisma Client Extension), pronta para uso mas sem models de negócio
+     ainda.
+  2. Banco — Row-Level Security do Postgres, ver seção abaixo.
+- **Revalidação**: `TenantMatchGuard`
+  (`apps/api/src/core/tenant/tenant-match.guard.ts`), aplicado globalmente,
+  garante que a `organizationId` ativa na sessão do better-auth bate com o
+  tenant resolvido pelo domínio. Requisições sem sessão passam livres — esse
+  guard não decide se uma rota exige login, só que sessão e domínio
+  concordem quando existe sessão.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Row-Level Security
 
-## Project setup
+Fonte da verdade das políticas: `apps/api/prisma/rls-policies.sql`
+(comentado, com o padrão a replicar em cada tabela de negócio nova).
+
+**Como é aplicado**: via Prisma Migration (raw SQL), não por um script
+separado. Motivo: o projeto já usa `prisma migrate` como pipeline único de
+schema, com histórico versionado em `prisma/migrations/` e aplicado em
+produção via `prisma migrate deploy` (CI/CD). Um script à parte teria que
+ser lembrado manualmente em cada ambiente novo e facilmente ficaria
+dessincronizado do schema — a migration garante que RLS é aplicado sempre
+que o schema é aplicado, no mesmo passo.
+
+Ao alterar `rls-policies.sql`: crie uma nova migration e copie o SQL
+atualizado para o `migration.sql` gerado, em vez de editar migrations já
+aplicadas.
+
+**Nota sobre o ambiente local**: o usuário Postgres usado em
+desenvolvimento (`clinum`, definido no `docker-compose.yml`) é superusuário
+do banco (padrão da imagem oficial do Postgres para o usuário criado via
+`POSTGRES_USER`). RLS nunca se aplica a superusuários — então, hoje, a
+política existe e está correta, mas é inerte nas queries locais. Ela passa a
+ter efeito real quando a aplicação passar a se conectar com um role
+dedicado, não-superusuário, o que fica para quando houver dados de negócio
+sensíveis o suficiente para justificar o role separado.
+
+**Nota sobre `SET LOCAL`**: as políticas comparam `organizationId` com
+`current_setting('app.current_organization_id', true)`. Isso exige que a
+aplicação rode `SET LOCAL app.current_organization_id = '<id>'` na mesma
+transação/conexão antes de cada query — ainda não implementado (a
+Camada 1, em `prisma-tenant.extension.ts`, hoje é só em memória via
+`getCurrentTenantId()`). Fica para quando a extension passar a abrir
+transação por request de negócio.
+
+## Variáveis de ambiente
+
+Além das já existentes (`DATABASE_URL`, `REDIS_URL`, etc.), esta fundação
+adiciona (ver `.env.example` na raiz do monorepo):
+
+| Variável                      | Descrição                                                                                                                                     |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET`          | Chave de assinatura/criptografia do better-auth. Gere uma por ambiente com `pnpm exec better-auth secret` — nunca reuse a de dev em produção. |
+| `BETTER_AUTH_URL`             | URL pública da própria API.                                                                                                                   |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | Origens confiáveis adicionais, separadas por vírgula (suporta wildcard de subdomínio).                                                        |
+
+## Rodando localmente
 
 ```bash
-$ pnpm install
+# na raiz do monorepo
+docker compose up -d          # sobe Postgres + Redis
+pnpm --filter @clinum/api prisma:migrate   # aplica migrations (models do better-auth + RLS)
+pnpm --filter @clinum/api dev              # sobe a API em http://localhost:3001
 ```
 
-## Compile and run the project
+Regenerar o schema do better-auth depois de mudar `auth.ts` (novos campos,
+plugins, roles):
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm --filter @clinum/api auth:generate
+pnpm --filter @clinum/api prisma:generate
 ```
 
-## Run tests
+### Testando manualmente
 
 ```bash
-# unit tests
-$ pnpm run test
+# cria uma organization (rota de teste, sem validação de negócio ainda)
+curl -X POST http://localhost:3001/organizations \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Clínica Bem Estar","slug":"clinicabemestar"}'
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+# prova que TenantMiddleware + AsyncLocalStorage resolveram o tenant
+curl http://localhost:3001/organizations/me \
+  -H "X-Tenant-Slug: clinicabemestar"
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Testes
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm --filter @clinum/api test:e2e
+# ou, só o teste de isolamento de tenant:
+pnpm --filter @clinum/api test:tenant-isolation
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+`apps/api/test/tenant-isolation.e2e-spec.ts` cobre o cenário básico: sessão
+autenticada da org-a acessando pelo domínio da org-b deve receber 403 do
+`TenantMatchGuard`. Deve ser expandido para também testar vazamento de dados
+assim que o primeiro model de negócio existir (ver comentário no topo do
+arquivo).
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## NestJS (boilerplate original)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Projeto gerado com o [Nest CLI](https://docs.nestjs.com/cli/overview).
 
-## Support
+```bash
+# desenvolvimento
+pnpm start:dev
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# produção
+pnpm build && pnpm start:prod
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# testes
+pnpm test
+pnpm test:e2e
+pnpm test:cov
+```
