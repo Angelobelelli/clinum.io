@@ -7,8 +7,34 @@
 //
 //   pnpm exec dotenv -e ../../.env -- better-auth generate --config src/core/auth/auth.ts --output prisma/schema.prisma -y
 //
+// IMPORTANTE: vertical, plano, role e platformRole ficam como String
+// (nunca enum) porque são escritos através das rotas de escrita do
+// better-auth (organization.create/update, member update), que converte
+// valores de enum pra string simples e quebra a validação do Prisma —
+// ver https://github.com/better-auth/better-auth/issues/4171. Validação
+// de valores permitidos para esses campos deve ser feita na camada de
+// aplicação (DTO/class-validator), não no banco.
+//
+// tipoVinculo e status (em Member) são a exceção: são escritos
+// diretamente pela nossa própria camada de aplicação, nunca através da
+// API de member do better-auth — por isso podem ser enums nativos do
+// Postgres com segurança.
+//
 // Ainda sem modelos de negócio (agenda, financeiro, etc.) — apenas a
 // fundação de tenant/auth.
+//
+// AdminAuditLog (no fim deste arquivo) é a exceção: NÃO é gerado pelo
+// better-auth, é mantido manualmente — é a trilha de auditoria da
+// administração da PLATAFORMA (cross-tenant), ver
+// apps/api/src/modules/platform-admin/.
+//
+// Reforçando o porquê de role/platformRole/vertical/plano ficarem String
+// (ver nota acima): o próprio gerador de schema do @better-auth/cli
+// (generatePrismaSchema) só sabe emitir String/Boolean/Int/DateTime/Json —
+// não existe branch de enum nele. Mesmo que alguém force um enum manual
+// nesses campos, o próximo `better-auth generate` reverte pra String de
+// novo, sem avisar. tipoVinculo/status escapam dessa por serem escritos
+// SOMENTE por apps/api/src/modules/members/ (nunca pelo better-auth).
 
 generator client {
   provider     = "prisma-client"
@@ -18,6 +44,16 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum TipoVinculo {
+  funcionario
+  parceiro_comissionado
+}
+
+enum MemberStatus {
+  ativo
+  inativo
 }
 
 model User {
@@ -32,6 +68,11 @@ model User {
   accounts      Account[]
   members       Member[]
   invitations   Invitation[]
+
+  platformRole String?
+  banned       Boolean?  @default(false)
+  banReason    String?
+  banExpires   DateTime?
 
   @@unique([email])
   @@map("user")
@@ -48,6 +89,8 @@ model Session {
   userId               String
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   activeOrganizationId String?
+
+  impersonatedBy String?
 
   @@unique([token])
   @@index([userId])
@@ -87,17 +130,19 @@ model Verification {
 }
 
 model Organization {
-  id           String       @id
-  name         String
-  slug         String
-  logo         String?
-  createdAt    DateTime
-  metadata     String?
-  customDomain String?
-  vertical     String?      @default("clinica_medica")
-  plano        String?      @default("basico")
-  members      Member[]
-  invitations  Invitation[]
+  id                   String                @id
+  name                 String
+  slug                 String
+  logo                 String?
+  createdAt            DateTime
+  metadata             String?
+  customDomain         String?
+  vertical             String?               @default("clinica_medica") // String proposital — ver nota no topo
+  plano                String?               @default("basico") // String proposital — ver nota no topo
+  members              Member[]
+  invitations          Invitation[]
+  patients             Patient[]
+  patientHealthRecords PatientHealthRecord[]
 
   @@unique([slug])
   @@unique([customDomain])
@@ -110,9 +155,13 @@ model Member {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   userId         String
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role           String       @default("member")
+  role           String       @default("member") // String proposital — ver nota no topo
   createdAt      DateTime
 
+  tipoVinculo TipoVinculo?
+  status      MemberStatus @default(ativo)
+
+  @@unique([organizationId, userId])
   @@index([organizationId])
   @@index([userId])
   @@map("member")
@@ -133,4 +182,103 @@ model Invitation {
   @@index([organizationId])
   @@index([email])
   @@map("invitation")
+}
+
+/// Primeiro model de negócio do Clinum — paciente de uma clínica.
+/// Deliberadamente separado de PatientHealthRecord (ficha de saúde): reception
+/// pode criar/ler/atualizar Patient, mas NUNCA deve conseguir ler a ficha de
+/// saúde (ver access-control.ts, resource "patient"). Manter em tabelas
+/// diferentes garante isso por padrão — um SELECT/findMany esquecido sem
+/// `include` nunca traz dado de saúde, porque ele fisicamente não está
+/// nessas colunas.
+///
+/// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
+/// (rls-policies.sql). Use sempre o client tenant-scoped
+/// (PatientsService), nunca o PrismaService cru, pra dado de paciente.
+
+model Patient {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  nome           String
+  cpf            String?
+  telefone       String?
+  email          String?
+  dataNascimento DateTime?
+
+  /// Campos específicos por Organization.vertical (clinica_medica/estetica/
+  /// studio_beleza) — schema exato AINDA NÃO definido pelo produto (TODO:
+  /// confirmar com o dono do produto). Validado via Zod por vertical na
+  /// camada de aplicação (ver modules/patients/dto/), não no banco — mesmo
+  /// raciocínio de Organization.vertical/plano (ver nota no topo do arquivo).
+  dadosVerticais Json?
+
+  healthRecord PatientHealthRecord?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // suporta a FK composta de PatientHealthRecord
+  @@unique([id, organizationId])
+  @@unique([organizationId, cpf])
+  @@index([organizationId])
+  @@map("patient")
+}
+
+/// Ficha de saúde do paciente (alergias, histórico, observações clínicas) —
+/// dado sensível. Só owner/admin/staff podem ler/escrever (reception não,
+/// ver access-control.ts). 1:1 com Patient, em tabela própria de propósito
+/// (ver comentário em Patient).
+///
+/// TENANT_SCOPED_MODELS: SIM. Tem RLS.
+
+model PatientHealthRecord {
+  id String @id @default(cuid())
+
+  // Denormalizado de propósito: a extension de tenant filtra por coluna
+  // direta no model (não por join), e a RLS policy precisa da mesma coluna
+  // nesta tabela. Nunca deve divergir do organizationId do Patient pai —
+  // reforçado pela FK composta abaixo (garantia de banco, não só convenção).
+  organizationId String
+  patientId      String
+  patient        Patient @relation(fields: [patientId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  alergias            String?
+  historico           String?
+  observacoesClinicas String?
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  // Composta (não só patientId) porque a relação acima referencia as duas
+  // colunas — é essa unicidade composta que garante o 1:1 com Patient.
+  @@unique([patientId, organizationId])
+  @@index([organizationId])
+  @@map("patient_health_record")
+}
+
+/// Auditoria de ações da administração da PLATAFORMA (dono do SaaS,
+/// cross-tenant) — ver apps/api/src/modules/platform-admin/. Model mantido
+/// MANUALMENTE (não gerado pelo better-auth generate).
+///
+/// Deliberadamente sem organizationId: não pertence a nenhum tenant. Por
+/// isso nunca deve ser adicionado a TENANT_SCOPED_MODELS em
+/// prisma-tenant.extension.ts, e é sempre lido/escrito via prismaClient cru
+/// (ver core/audit/admin-audit-log.ts).
+
+model AdminAuditLog {
+  id                   String   @id @default(cuid())
+  adminUserId          String
+  action               String
+  targetOrganizationId String?
+  targetUserId         String?
+  metadata             Json?
+  createdAt            DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([targetOrganizationId])
+  @@index([targetUserId])
+  @@map("admin_audit_log")
 }

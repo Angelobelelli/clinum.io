@@ -4,10 +4,12 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { Request } from 'express';
 import { auth } from '../auth/auth';
 import { getCurrentTenantId } from './tenant-context';
+import { SKIP_TENANT_MATCH_KEY } from './skip-tenant-match.decorator';
 
 /**
  * Revalida, para toda requisição autenticada, que a organização ativa da
@@ -24,7 +26,18 @@ import { getCurrentTenantId } from './tenant-context';
  */
 @Injectable()
 export class TenantMatchGuard implements CanActivate {
+  constructor(private readonly reflector: Reflector) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const skipTenantMatch = this.reflector.getAllAndOverride<boolean>(
+      SKIP_TENANT_MATCH_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (skipTenantMatch) {
+      return true;
+    }
+
     const req = context.switchToHttp().getRequest<Request>();
 
     const authSession = await auth.api.getSession({

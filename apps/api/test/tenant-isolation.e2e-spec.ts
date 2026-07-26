@@ -18,20 +18,11 @@ import { PrismaService } from '../src/core/database/prisma.service';
  * um tenant (clínica/estética/studio) a partir de outro tenant, já que a
  * aplicação lida com prontuário/ficha de atendimento e dados financeiros.
  *
- * FASE ATUAL: só existe a fundação de tenant/auth (TenantMiddleware +
- * TenantMatchGuard), sem nenhum model de negócio ainda. Os testes abaixo
- * cobrem só o cenário mais básico possível: uma sessão autenticada da org-a,
- * usada contra o domínio da org-b, deve ser barrada com 403 pelo
- * TenantMatchGuard.
- *
- * QUANDO O PRIMEIRO MODEL DE NEGÓCIO EXISTIR (ex: "Patient"), EXPANDA este
- * arquivo para também testar que dados não vazam entre tenants:
- *   - criar um registro sob o contexto da org-a;
- *   - autenticado como org-b, confirmar 404 (não 200/403) ao buscar por ID;
- *   - confirmar que listagens da org-b nunca incluem registros da org-a;
- *   - confirmar que não é possível criar/atualizar um registro apontando
- *     `organizationId` de outro tenant (a prisma-tenant.extension.ts deve
- *     ignorar/sobrescrever qualquer organizationId vindo do client).
+ * Usa `Patient` (modules/patients/) como o recurso de negócio real pra
+ * testar isolamento — ver também prisma-tenant.extension.ts e
+ * rls-policies.sql para as duas camadas que esses testes cobrem
+ * (indiretamente a camada 1 aqui; a camada 2/RLS pura tem verificação
+ * própria em test/patients-rls.e2e-spec.ts).
  */
 interface SignUpResponseBody {
   user: { id: string };
@@ -41,6 +32,12 @@ interface OrganizationResponseBody {
   id: string;
 }
 
+interface PatientResponseBody {
+  id: string;
+  organizationId: string;
+  nome: string;
+}
+
 describe('Isolamento multi-tenant (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -48,6 +45,7 @@ describe('Isolamento multi-tenant (e2e)', () => {
   let orgA: { id: string; slug: string };
   let orgB: { id: string; slug: string };
   let sessionCookie: string;
+  let sessionCookieOrgB: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -113,6 +111,33 @@ describe('Isolamento multi-tenant (e2e)', () => {
       where: { userId },
       data: { activeOrganizationId: orgA.id },
     });
+
+    // Segundo usuário, owner da org-b — usado nos testes de isolamento com
+    // Patient abaixo.
+    const emailB = `owner-b-${randomUUID().slice(0, 8)}@tenant-isolation.test`;
+    const signUpResponseB = await request(app.getHttpServer())
+      .post('/api/auth/sign-up/email')
+      .send({ email: emailB, password: 'Sup3rSecret!23', name: 'Owner B' })
+      .expect(200);
+    const userIdB = (signUpResponseB.body as SignUpResponseBody).user.id;
+    const setCookieHeaderB = signUpResponseB.headers[
+      'set-cookie'
+    ] as unknown as string[];
+    sessionCookieOrgB = setCookieHeaderB[0].split(';')[0];
+
+    await prisma.db.member.create({
+      data: {
+        id: randomUUID(),
+        organizationId: orgB.id,
+        userId: userIdB,
+        role: 'owner',
+        createdAt: new Date(),
+      },
+    });
+    await prisma.db.session.updateMany({
+      where: { userId: userIdB },
+      data: { activeOrganizationId: orgB.id },
+    });
   });
 
   afterAll(async () => {
@@ -151,13 +176,59 @@ describe('Isolamento multi-tenant (e2e)', () => {
     expect(response.status).toBe(404);
   });
 
-  it.todo(
-    'não deve retornar registros de outro tenant ao listar um recurso de negócio (ver comentário no topo do arquivo)',
-  );
-  it.todo(
-    'não deve permitir acessar um recurso de outro tenant pelo ID (404, não 200/403)',
-  );
-  it.todo(
-    'não deve permitir criar/atualizar um recurso apontando organizationId de outro tenant',
-  );
+  it('não deve retornar registros de outro tenant ao listar um recurso de negócio', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({ nome: 'Paciente da Org A' })
+      .expect(201);
+    const patientA = createResponse.body as PatientResponseBody;
+
+    const listAsOrgB = await request(app.getHttpServer())
+      .get('/patients')
+      .set('Host', hostFor(orgB.slug))
+      .set('Cookie', sessionCookieOrgB)
+      .expect(200);
+
+    const idsVisiveisParaOrgB = (listAsOrgB.body as PatientResponseBody[]).map(
+      (p) => p.id,
+    );
+    expect(idsVisiveisParaOrgB).not.toContain(patientA.id);
+  });
+
+  it('não deve permitir acessar um recurso de outro tenant pelo ID (404, não 200/403)', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({ nome: 'Paciente da Org A 2' })
+      .expect(201);
+    const patientA = createResponse.body as PatientResponseBody;
+
+    const response = await request(app.getHttpServer())
+      .get(`/patients/${patientA.id}`)
+      .set('Host', hostFor(orgB.slug))
+      .set('Cookie', sessionCookieOrgB);
+
+    expect(response.status).toBe(404);
+  });
+
+  it('não deve permitir criar um recurso apontando organizationId de outro tenant', async () => {
+    // organizationId nem existe no schema Zod do endpoint (ver
+    // create-patient.schema.ts) — mas o teste manda no corpo cru mesmo
+    // assim, simulando um cliente malicioso, pra provar que o servidor
+    // (Zod stripando o campo + a extension sobrescrevendo) ignora
+    // completamente qualquer organizationId vindo do client.
+    const response = await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({ nome: 'Paciente Tentando Spoof', organizationId: orgB.id })
+      .expect(201);
+
+    const patient = response.body as PatientResponseBody;
+    expect(patient.organizationId).toBe(orgA.id);
+    expect(patient.organizationId).not.toBe(orgB.id);
+  });
 });

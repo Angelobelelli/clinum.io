@@ -1,0 +1,957 @@
+{
+  "info": {
+    "name": "Clinum API",
+    "description": "Rotas da fundação de auth/multi-tenant/plataforma do Clinum.\n\nIMPORTANTE — cookies de sessão: NÃO dependemos mais do Cookie Manager automático do Postman. Ele guarda só UM cookie por domínio, então logar como uma conta nova sobrescreve a sessão anterior — péssimo quando você precisa testar várias contas ao mesmo tempo (super_admin, dono da clínica 1, dono da clínica 2, staff, reception).\n\nEm vez disso: os requests de 'Sign in' em 01 - Auth têm um script (aba Scripts → Post-response) que captura o cookie da resposta e salva numa VARIÁVEL da collection (cookie_superadmin, cookie_owner1, cookie_owner2, cookie_staff, cookie_reception). Todo outro request usa `Cookie: {{cookie_X}}` explicitamente no header — assim várias sessões convivem ao mesmo tempo, sem precisar logar de novo toda vez que troca de conta.\n\nOrigin: o better-auth exige o header Origin em qualquer requisição pra /api/auth/* que já carregue algum cookie (mesmo tentando logar como outra conta) — por isso toda rota /api/auth/* aqui já manda `Origin: {{trustedOrigin}}` por padrão, pra nunca cair nesse erro (MISSING_OR_NULL_ORIGIN) à toa.\n\nVariáveis (defina/ajuste no Environment 'Clinum - Local' ou direto na collection):\n- baseUrl: http://localhost:3001\n- trustedOrigin: http://localhost:3000 (precisa bater com BETTER_AUTH_TRUSTED_ORIGINS do .env)\n- cookie_superadmin / cookie_owner1 / cookie_owner2 / cookie_staff / cookie_reception: preenchidos automaticamente pelos requests de Sign in (01 - Auth)\n- tenantSlug1 / tenantSlug2: slugs das duas organizações que você estiver usando pra testar isolamento\n- testUserId / testOrganizationId / testMemberId / testPatientId / invitationId / sessionToken: preenchidos manualmente conforme for testando (copie das respostas anteriores)\n\nEndpoints de /api/auth/* são gerados automaticamente pelo better-auth (ver apps/api/src/core/auth/auth.ts) — não são controllers Nest nossos, mas fazem parte da API da mesma forma.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "trustedOrigin", "value": "http://localhost:3000" },
+    { "key": "cookie_superadmin", "value": "" },
+    { "key": "cookie_owner1", "value": "" },
+    { "key": "cookie_owner2", "value": "" },
+    { "key": "cookie_staff", "value": "" },
+    { "key": "cookie_reception", "value": "" },
+    { "key": "tenantSlug1", "value": "clinica-teste" },
+    { "key": "tenantSlug2", "value": "outra-clinica" },
+    { "key": "testUserId", "value": "" },
+    { "key": "testOrganizationId", "value": "" },
+    { "key": "testMemberId", "value": "" },
+    { "key": "testPatientId", "value": "" },
+    { "key": "invitationId", "value": "" },
+    { "key": "sessionToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "00 - Health",
+      "item": [
+        {
+          "name": "Health check (GET /)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Rota raiz do AppController — não passa pelo TenantMiddleware (excluída explicitamente em app.module.ts)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Auth (better-auth)",
+      "description": "Rotas base do better-auth, montadas em /api/auth/* (ver mount-auth.ts). Todos os requests já mandam Origin por padrão (ver nota no topo da collection).",
+      "item": [
+        {
+          "name": "Sign up (genérico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-up/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-up", "email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"novo-usuario@clinum.io\",\n  \"password\": \"SenhaForte123!\",\n  \"name\": \"Novo Usuário\"\n}"
+            },
+            "description": "Cria um usuário novo. A resposta traz `role` (não `platformRole`) — o better-auth sempre expõe esse campo com esse nome na API/JSON, mesmo a coluna no Postgres sendo `platformRole` (ver apps/api/src/core/auth/platform-role.ts). Novo usuário sempre nasce com platformRole = \"user\"."
+          }
+        },
+        {
+          "name": "Sign in → salvar cookie (super_admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const raw = pm.cookies.get('better-auth.session_token');",
+                  "if (raw) {",
+                  "  pm.collectionVariables.set('cookie_superadmin', 'better-auth.session_token=' + raw);",
+                  "  console.log('cookie_superadmin atualizado');",
+                  "} else {",
+                  "  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"angelo@clinum.io\",\n  \"password\": \"SUA_SENHA\"\n}"
+            },
+            "description": "Loga e salva o cookie em {{cookie_superadmin}} (via script na aba Scripts → Post-response). Use esse e-mail como sua conta de super_admin."
+          }
+        },
+        {
+          "name": "Sign in → salvar cookie (dono clínica 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const raw = pm.cookies.get('better-auth.session_token');",
+                  "if (raw) {",
+                  "  pm.collectionVariables.set('cookie_owner1', 'better-auth.session_token=' + raw);",
+                  "  console.log('cookie_owner1 atualizado');",
+                  "} else {",
+                  "  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dono@clinicateste.com\",\n  \"password\": \"OutraSenhaForte123!\"\n}"
+            },
+            "description": "Loga e salva o cookie em {{cookie_owner1}} — dono da organização em {{tenantSlug1}}."
+          }
+        },
+        {
+          "name": "Sign in → salvar cookie (dono clínica 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const raw = pm.cookies.get('better-auth.session_token');",
+                  "if (raw) {",
+                  "  pm.collectionVariables.set('cookie_owner2', 'better-auth.session_token=' + raw);",
+                  "  console.log('cookie_owner2 atualizado');",
+                  "} else {",
+                  "  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dono2@outraclinica.com\",\n  \"password\": \"SenhaForte456!\"\n}"
+            },
+            "description": "Loga e salva o cookie em {{cookie_owner2}} — dono da organização em {{tenantSlug2}}."
+          }
+        },
+        {
+          "name": "Sign in → salvar cookie (staff)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const raw = pm.cookies.get('better-auth.session_token');",
+                  "if (raw) {",
+                  "  pm.collectionVariables.set('cookie_staff', 'better-auth.session_token=' + raw);",
+                  "  console.log('cookie_staff atualizado');",
+                  "} else {",
+                  "  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff@clinicateste.com\",\n  \"password\": \"SenhaForte123!\"\n}"
+            },
+            "description": "Loga e salva o cookie em {{cookie_staff}} — precisa já existir como Member com role=staff em alguma organização (ver 02 - Invite member / 04 - Update member role)."
+          }
+        },
+        {
+          "name": "Sign in → salvar cookie (reception)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const raw = pm.cookies.get('better-auth.session_token');",
+                  "if (raw) {",
+                  "  pm.collectionVariables.set('cookie_reception', 'better-auth.session_token=' + raw);",
+                  "  console.log('cookie_reception atualizado');",
+                  "} else {",
+                  "  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"reception@clinicateste.com\",\n  \"password\": \"SenhaForte123!\"\n}"
+            },
+            "description": "Loga e salva o cookie em {{cookie_reception}} — precisa já existir como Member com role=reception em alguma organização."
+          }
+        },
+        {
+          "name": "Get session",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "{{cookie_superadmin}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/get-session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "get-session"]
+            },
+            "description": "Retorna a sessão atual do cookie enviado — útil pra conferir platformRole/activeOrganizationId sem precisar decodificar nada. Troque o header Cookie pra {{cookie_owner1}}/{{cookie_staff}}/etc. pra checar outra sessão."
+          }
+        },
+        {
+          "name": "Sign out",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-out",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-out"]
+            },
+            "description": "Troque o header Cookie pra sessão que você quer encerrar."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Organizations (better-auth org plugin)",
+      "description": "Endpoints do plugin `organization` (papéis owner/admin/member/staff/reception — escopados a UMA organização, ver access-control.ts). Existem outros endpoints do plugin (teams, custom roles) não incluídos aqui por não estarem em uso no projeto ainda. Todos usam {{cookie_owner1}} por padrão — troque pra {{cookie_owner2}} pra agir na outra organização.",
+      "item": [
+        {
+          "name": "Create organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "create"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Clínica Teste\",\n  \"slug\": \"{{tenantSlug1}}\",\n  \"vertical\": \"clinica_medica\"\n}"
+            },
+            "description": "Quem chama vira owner automaticamente. Diferente do POST /organizations (custom, ver pasta 03) que só insere direto no Prisma sem vincular a nenhum usuário."
+          }
+        },
+        {
+          "name": "List organizations (do usuário logado)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "list"]
+            }
+          }
+        },
+        {
+          "name": "Get full organization",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/get-full-organization?organizationId={{testOrganizationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "get-full-organization"],
+              "query": [
+                { "key": "organizationId", "value": "{{testOrganizationId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Set active organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/set-active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "set-active"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationId\": \"{{testOrganizationId}}\"\n}"
+            },
+            "description": "Seta activeOrganizationId na sessão — é esse valor que o TenantMatchGuard compara contra o tenant resolvido pelo domínio (ver tenant-match.guard.ts)."
+          }
+        },
+        {
+          "name": "Invite member",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/invite-member",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "invite-member"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff@clinicateste.com\",\n  \"role\": \"staff\",\n  \"organizationId\": \"{{testOrganizationId}}\"\n}"
+            },
+            "description": "role aceita: owner, admin, member, staff, reception (ver access-control.ts). Requer sessão com permissão de convidar (owner/admin/reception). Use os e-mails staff@clinicateste.com / reception@clinicateste.com pra já bater com os requests de Sign in dessas contas em 01 - Auth."
+          }
+        },
+        {
+          "name": "Accept invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_staff}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/accept-invitation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "accept-invitation"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invitationId\": \"{{invitationId}}\"\n}"
+            },
+            "description": "Rode logado como a conta convidada (troque o Cookie pra {{cookie_staff}}/{{cookie_reception}} conforme o convite)."
+          }
+        },
+        {
+          "name": "List members",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/list-members?organizationId={{testOrganizationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "list-members"],
+              "query": [
+                { "key": "organizationId", "value": "{{testOrganizationId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update member role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/update-member-role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "update-member-role"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{testMemberId}}\",\n  \"role\": \"admin\",\n  \"organizationId\": \"{{testOrganizationId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove member",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/organization/remove-member",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "organization", "remove-member"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberIdOrEmail\": \"{{testMemberId}}\",\n  \"organizationId\": \"{{testOrganizationId}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Organizations (controller custom)",
+      "description": "OrganizationsController (apps/api/src/organizations/) — rotas de teste manual da fundação de tenant, sem passar pelo plugin organization do better-auth. Não exigem Origin (não são /api/auth/*) nem sessão.",
+      "item": [
+        {
+          "name": "Create organization (via Prisma direto)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/organizations",
+              "host": ["{{baseUrl}}"],
+              "path": ["organizations"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Clínica Direto Prisma\",\n  \"slug\": \"clinica-direto-prisma\",\n  \"vertical\": \"clinica_medica\",\n  \"plano\": \"basico\"\n}"
+            },
+            "description": "Único endpoint excluído do TenantMiddleware por ser \"pré-tenant\" (não existe domínio pra ele ainda). Não vincula a nenhum usuário/Member — é só pra popular dado de teste rápido."
+          }
+        },
+        {
+          "name": "Get my organization (por tenant resolvido)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/organizations/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["organizations", "me"]
+            },
+            "description": "Prova que TenantMiddleware resolveu o tenant certo. Em dev, use o header X-Tenant-Slug (não tem subdomínio real em localhost)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Members",
+      "description": "MembersController (apps/api/src/modules/members/) — atualização de tipoVinculo/status de um Member, separada do fluxo do better-auth. Só owner/admin da organização podem chamar (MemberOrgAdminGuard). Rota tenant-scoped normal (precisa de X-Tenant-Slug).",
+      "item": [
+        {
+          "name": "Update tipoVinculo/status de um member",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/members/{{testMemberId}}/vinculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["members", "{{testMemberId}}", "vinculo"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoVinculo\": \"funcionario\",\n  \"status\": \"ativo\"\n}"
+            },
+            "description": "tipoVinculo: \"funcionario\" | \"parceiro_comissionado\" (só relevante pra member com role=staff). status: \"ativo\" | \"inativo\". 403 se {{cookie_staff}}/{{cookie_reception}} tentar chamar isso (só owner/admin podem). 404 se testMemberId for de outra organização."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Patients",
+      "description": "PatientsController (apps/api/src/modules/patients/) — primeiro model de negócio real, com as duas camadas de isolamento de tenant (aplicação + RLS) ativas. owner/admin/staff têm acesso total (inclusive ficha de saúde); reception cria/lê/atualiza só os dados básicos, NUNCA a ficha de saúde. Todos os requests aqui precisam de X-Tenant-Slug.",
+      "item": [
+        {
+          "name": "Create patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria da Silva\",\n  \"cpf\": \"12345678901\",\n  \"telefone\": \"11987654321\",\n  \"email\": \"maria.silva@example.com\",\n  \"dataNascimento\": \"1990-05-15\"\n}"
+            },
+            "description": "Só `nome` é obrigatório. cpf precisa ter 11 dígitos numéricos (400 se inválido). reception também consegue chamar isso (troque Cookie pra {{cookie_reception}})."
+          }
+        },
+        {
+          "name": "List patients",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients"]
+            },
+            "description": "Nunca traz pacientes de outra organização — troque X-Tenant-Slug pra {{tenantSlug2}} (com Cookie {{cookie_owner2}}) pra confirmar isolamento."
+          }
+        },
+        {
+          "name": "Get patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{testPatientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "{{testPatientId}}"]
+            },
+            "description": "404 (não 403) se testPatientId pertencer a outra organização — teste trocando X-Tenant-Slug/Cookie pra outra clínica com o mesmo ID."
+          }
+        },
+        {
+          "name": "Update patient",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{testPatientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "{{testPatientId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefone\": \"11900001111\"\n}"
+            },
+            "description": "Todos os campos são opcionais aqui (partial do create)."
+          }
+        },
+        {
+          "name": "Delete patient",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{testPatientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "{{testPatientId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get health record",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{testPatientId}}/health-record",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "{{testPatientId}}", "health-record"]
+            },
+            "description": "Troque Cookie pra {{cookie_reception}} pra confirmar o 403 (reception nunca vê ficha de saúde). {{cookie_staff}} também funciona (200)."
+          }
+        },
+        {
+          "name": "Update health record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{testPatientId}}/health-record",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "{{testPatientId}}", "health-record"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alergias\": \"Dipirona\",\n  \"historico\": \"Nenhum relevante\",\n  \"observacoesClinicas\": \"Paciente colaborativo\"\n}"
+            },
+            "description": "Troque Cookie pra {{cookie_reception}} pra confirmar o 403 (reception não pode atualizar ficha de saúde)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Platform Admin (módulo custom)",
+      "description": "PlatformAdminController (apps/api/src/modules/platform-admin/) — exige platformRole = super_admin. Cross-tenant por definição; isento de TenantMiddleware/TenantMatchGuard (sem X-Tenant-Slug). Toda chamada aqui grava uma linha em AdminAuditLog.",
+      "item": [
+        {
+          "name": "List all organizations (cross-tenant)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "{{cookie_superadmin}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/organizations",
+              "host": ["{{baseUrl}}"],
+              "path": ["platform-admin", "organizations"]
+            },
+            "description": "200 + lista de TODAS as organizations (de todos os tenants) se logado como super_admin. 401 sem sessão. 403 se logado mas sem platformRole = super_admin. Grava AdminAuditLog com action = \"list_organizations\"."
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Platform Admin (better-auth admin plugin)",
+      "description": "Endpoints nativos do plugin `admin` do better-auth, em /api/auth/admin/*. Gate próprio do plugin (adminRoles = [\"super_admin\"], ver auth.ts) — INDEPENDENTE do PlatformAdminGuard da pasta acima. Todos usam {{cookie_superadmin}} e mandam Origin por padrão.",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/list-users?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "list-users"],
+              "query": [{ "key": "limit", "value": "20" }]
+            }
+          }
+        },
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/get-user?id={{testUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "get-user"],
+              "query": [{ "key": "id", "value": "{{testUserId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/create-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "create-user"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"criado-por-admin@clinum.io\",\n  \"password\": \"SenhaForte123!\",\n  \"name\": \"Criado por Admin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Set role (platformRole)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/set-role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "set-role"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\",\n  \"role\": \"super_admin\"\n}"
+            },
+            "description": "role aqui é o platformRole (\"user\" ou \"super_admin\") — NADA a ver com role de Member/organização. Precisa de userId de verdade, não e-mail."
+          }
+        },
+        {
+          "name": "Ban user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/ban-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "ban-user"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\",\n  \"banReason\": \"Teste manual\"\n}"
+            },
+            "description": "Não dá pra banir a si mesmo (YOU_CANNOT_BAN_YOURSELF)."
+          }
+        },
+        {
+          "name": "Unban user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/unban-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "unban-user"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Impersonate user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/impersonate-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "impersonate-user"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\"\n}"
+            },
+            "description": "A resposta traz um cookie de sessão NOVO (do usuário impersonificado) — copie manualmente pra uma variável (ex: cookie_owner1) se quiser continuar agindo como ele nos próximos requests. Grava AdminAuditLog com action = \"impersonate\"."
+          }
+        },
+        {
+          "name": "Stop impersonating",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/stop-impersonating",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "stop-impersonating"]
+            },
+            "description": "Use o cookie de impersonation (não o do super_admin original) pra voltar à sessão original dele."
+          }
+        },
+        {
+          "name": "List user sessions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/list-user-sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "list-user-sessions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Revoke user session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/revoke-user-session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "revoke-user-session"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionToken\": \"{{sessionToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Revoke all user sessions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/revoke-user-sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "revoke-user-sessions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Set user password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/set-user-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "set-user-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\",\n  \"newPassword\": \"NovaSenhaForte123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/remove-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "remove-user"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{testUserId}}\"\n}"
+            },
+            "description": "Cuidado — deleta o usuário de verdade. Use só com usuários de teste."
+          }
+        },
+        {
+          "name": "Has permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Origin", "value": "{{trustedOrigin}}" },
+              { "key": "Cookie", "value": "{{cookie_superadmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/admin/has-permission",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "admin", "has-permission"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permission\": { \"user\": [\"impersonate\"] }\n}"
+            },
+            "description": "Checa se a sessão atual (ou role informada) tem a permissão de plataforma indicada — útil pra debugar por que um super_admin não conseguiu fazer algo."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -20,13 +20,27 @@
 --
 -- COMO A APLICAÇÃO INFORMA O TENANT ATUAL AO POSTGRES
 -- getCurrentTenantId() (tenant-context.ts) resolve o organizationId em
--- memória, via AsyncLocalStorage. Para as políticas abaixo funcionarem de
--- fato, a MESMA conexão usada para rodar a query precisa executar
--- `SET LOCAL app.current_organization_id = '<organizationId>'` antes da
--- query, dentro da mesma transação. Isso ainda NÃO está implementado na
--- prisma-tenant.extension.ts (que hoje é só a camada 1, em memória/app) —
--- fica para quando a extension passar a abrir uma transação por
--- request/query de negócio. Registrado aqui para não ser esquecido.
+-- memória, via AsyncLocalStorage. Para as políticas de tabelas de NEGÓCIO
+-- (ex: patient) funcionarem de fato, a MESMA conexão usada para rodar a
+-- query precisa executar `set_config('app.current_organization_id', <id>,
+-- true)` (equivalente a SET LOCAL) antes da query, na mesma transação —
+-- IMPLEMENTADO em prisma-tenant.extension.ts via `$transaction([...])`
+-- (forma sequencial, não a de callback interativo).
+--
+-- IMPORTANTE: isso só tem efeito porque as tabelas de negócio são acessadas
+-- através de tenantScopedPrismaClient (tenant-scoped-prisma-client.ts), que
+-- conecta como um role Postgres RESTRITO, sem SUPERUSER (ver
+-- docker-init/create-app-role.sh + APP_DATABASE_URL) — superusuário SEMPRE
+-- ignora RLS, mesmo com FORCE ROW LEVEL SECURITY.
+--
+-- A tabela "organization" (abaixo) é uma EXCEÇÃO deliberada a esse modelo:
+-- ela continua sendo lida pela conexão superuser (prismaClient/
+-- DATABASE_URL), porque o TenantMiddleware precisa resolver o tenant a
+-- partir do Host ANTES de qualquer app.current_organization_id existir
+-- (problema de ovo-e-galinha). A policy abaixo existe e é tecnicamente
+-- válida, mas fica inerte na prática nessa tabela — o isolamento real de
+-- "organization" hoje é feito pelo TenantMatchGuard (camada de aplicação),
+-- não por RLS. Registrado aqui para não ser confundido com um bug.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -52,10 +66,34 @@ CREATE POLICY organization_tenant_isolation ON "organization"
   WITH CHECK (id = current_setting('app.current_organization_id', true));
 
 -- -----------------------------------------------------------------------------
+-- Tabelas: patient, patient_health_record
+--
+-- Primeiras tabelas de negócio reais — acessadas via
+-- tenantScopedPrismaClient (role Postgres restrito, sem SUPERUSER), então
+-- estas policies têm efeito de verdade (diferente da de "organization",
+-- ver nota acima).
+-- -----------------------------------------------------------------------------
+
+ALTER TABLE "patient" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "patient" FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY patient_tenant_isolation ON "patient"
+  USING ("organizationId" = current_setting('app.current_organization_id', true))
+  WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
+
+ALTER TABLE "patient_health_record" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "patient_health_record" FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY patient_health_record_tenant_isolation ON "patient_health_record"
+  USING ("organizationId" = current_setting('app.current_organization_id', true))
+  WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
+
+-- -----------------------------------------------------------------------------
 -- MODELO PARA TABELAS DE NEGÓCIO FUTURAS
 --
--- Toda nova tabela de negócio (agenda, financeiro, clientes finais, etc.)
--- deve ter uma coluna "organizationId" e replicar exatamente este padrão,
+-- Toda nova tabela de negócio (agenda, financeiro, etc.) deve ter uma
+-- coluna "organizationId", ser acessada via tenantScopedPrismaClient (ver
+-- tenant-scoped-prisma-client.ts) e replicar exatamente este padrão,
 -- trocando "nome_da_tabela" pelo nome real (mapeado via @@map no schema):
 --
 --   ALTER TABLE "nome_da_tabela" ENABLE ROW LEVEL SECURITY;
@@ -70,4 +108,8 @@ CREATE POLICY organization_tenant_isolation ON "organization"
 -- Nesse caso "coluna = NULL" nunca é verdadeiro, ou seja: sem
 -- app.current_organization_id setado, a política nega tudo por padrão
 -- (fail closed) em vez de vazar dados de qualquer tenant.
+--
+-- Não esqueça de GRANT SELECT/INSERT/UPDATE/DELETE pro role restrito nessa
+-- tabela — já coberto automaticamente por ALTER DEFAULT PRIVILEGES em
+-- docker-init/create-app-role.sh para tabelas novas, mas confirme.
 -- -----------------------------------------------------------------------------

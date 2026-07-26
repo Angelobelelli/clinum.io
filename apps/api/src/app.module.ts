@@ -11,9 +11,18 @@ import { DatabaseModule } from './core/database/database.module';
 import { TenantMatchGuard } from './core/tenant/tenant-match.guard';
 import { TenantMiddleware } from './core/tenant/tenant.middleware';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
+import { MembersModule } from './modules/members/members.module';
+import { PatientsModule } from './modules/patients/patients.module';
 
 @Module({
-  imports: [DatabaseModule, OrganizationsModule],
+  imports: [
+    DatabaseModule,
+    OrganizationsModule,
+    PlatformAdminModule,
+    MembersModule,
+    PatientsModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
@@ -33,6 +42,13 @@ export class AppModule implements NestModule {
         // Criar uma organização é uma operação de "pré-tenant" — não existe
         // ainda um domínio/subdomínio resolvível para ela.
         { path: 'organizations', method: RequestMethod.POST },
+        // Rotas de administração da PLATAFORMA (dono do SaaS) são
+        // cross-tenant por definição — não faz sentido resolver um tenant
+        // pelo domínio para elas (ver modules/platform-admin/). O
+        // isolamento aqui é responsabilidade de PlatformAdminGuard, não de
+        // TenantMiddleware/TenantMatchGuard (ver @SkipTenantMatch no
+        // controller).
+        { path: 'platform-admin/{*splat}', method: RequestMethod.ALL },
       )
       .forRoutes('*');
   }
