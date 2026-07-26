@@ -6,7 +6,15 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'dist/**', 'generated/**'],
+    ignores: [
+      'eslint.config.mjs',
+      'dist/**',
+      'generated/**',
+      // Script CJS puro (require hook), roda antes de qualquer compilação —
+      // não faz parte de nenhum tsconfig include, então o project service
+      // do typescript-eslint não consegue tipá-lo.
+      'scripts/require-ts-extensions.cjs',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

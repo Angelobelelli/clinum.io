@@ -23,7 +23,8 @@
     "prisma:generate": "dotenv -e ../../.env -- prisma generate",
     "prisma:migrate": "dotenv -e ../../.env -- prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "auth:generate": "dotenv -e ../../.env -- better-auth generate --config src/core/auth/auth.ts --output prisma/schema.prisma -y"
+    "auth:generate": "dotenv -e ../../.env -- better-auth generate --config src/core/auth/auth.ts --output prisma/schema.prisma -y",
+    "admin:promote": "dotenv -e ../../.env -- node -r ./scripts/require-ts-extensions.cjs -r ts-node/register -r tsconfig-paths/register scripts/promote-super-admin.ts"
   },
   "dependencies": {
     "@clinum/shared-types": "workspace:*",
@@ -36,7 +37,8 @@
     "express": "^5.2.1",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@better-auth/cli": "^1.4.21",
