@@ -18,11 +18,16 @@ ainda não existem.
   guardado em `AsyncLocalStorage` (`tenant-context.ts`) para o resto do
   request. Em `NODE_ENV=development`, o header `X-Tenant-Slug` sobrepõe a
   resolução por Host (não há subdomínio real em localhost).
-- **Isolamento em duas camadas**:
+- **Isolamento em duas camadas** (ambas ativas, ver `Patient`/
+  `PatientHealthRecord` como o exemplo real em produção):
   1. Aplicação — `apps/api/src/core/database/prisma-tenant.extension.ts`
-     (Prisma Client Extension), pronta para uso mas sem models de negócio
-     ainda.
+     (Prisma Client Extension), injeta/filtra `organizationId`
+     automaticamente.
   2. Banco — Row-Level Security do Postgres, ver seção abaixo.
+     Tabelas de negócio são sempre acessadas via `tenantScopedPrismaClient`
+     (`tenant-scoped-prisma-client.ts`) — nunca o `PrismaService`/`prismaClient`
+     crus, que continuam servindo só as tabelas de auth/tenant (user, session,
+     organization, member, etc.).
 - **Revalidação**: `TenantMatchGuard`
   (`apps/api/src/core/tenant/tenant-match.guard.ts`), aplicado globalmente,
   garante que a `organizationId` ativa na sessão do better-auth bate com o
@@ -47,33 +52,54 @@ Ao alterar `rls-policies.sql`: crie uma nova migration e copie o SQL
 atualizado para o `migration.sql` gerado, em vez de editar migrations já
 aplicadas.
 
-**Nota sobre o ambiente local**: o usuário Postgres usado em
-desenvolvimento (`clinum`, definido no `docker-compose.yml`) é superusuário
-do banco (padrão da imagem oficial do Postgres para o usuário criado via
-`POSTGRES_USER`). RLS nunca se aplica a superusuários — então, hoje, a
-política existe e está correta, mas é inerte nas queries locais. Ela passa a
-ter efeito real quando a aplicação passar a se conectar com um role
-dedicado, não-superusuário, o que fica para quando houver dados de negócio
-sensíveis o suficiente para justificar o role separado.
+**Usuário Postgres restrito (`clinum_app`)**: o usuário `clinum`
+(`POSTGRES_USER`, definido no `docker-compose.yml`) é superusuário do banco
+(padrão da imagem oficial do Postgres) — superusuário SEMPRE ignora RLS,
+mesmo com `FORCE ROW LEVEL SECURITY`. Por isso, tabelas de negócio (Patient,
+etc.) são acessadas por um segundo role, `clinum_app`, sem `SUPERUSER`,
+criado automaticamente por `docker-init/create-app-role.sh` (montado como
+init script do container Postgres). `clinum` continua existindo e é usado
+só para migrations/CLI (que precisam de DDL, privilégio que `clinum_app` não
+tem) e para as tabelas de auth/tenant já existentes (ver nota abaixo sobre
+"organization").
 
-**Nota sobre `SET LOCAL`**: as políticas comparam `organizationId` com
-`current_setting('app.current_organization_id', true)`. Isso exige que a
-aplicação rode `SET LOCAL app.current_organization_id = '<id>'` na mesma
-transação/conexão antes de cada query — ainda não implementado (a
-Camada 1, em `prisma-tenant.extension.ts`, hoje é só em memória via
-`getCurrentTenantId()`). Fica para quando a extension passar a abrir
-transação por request de negócio.
+Se você já tinha o container Postgres rodando antes dessa mudança (volume
+com dados), o init script não roda sozinho (só roda na primeira
+inicialização, volume vazio). Aplique manualmente, sem perder nada:
+
+```bash
+docker exec -i clinum-postgres sh /docker-entrypoint-initdb.d/create-app-role.sh
+```
+
+**Exceção deliberada: a tabela `organization`**: a policy nela existe e é
+válida, mas fica **inerte na prática** — ela continua sendo lida pela
+conexão `clinum` (superuser/`DATABASE_URL`), porque `TenantMiddleware`
+precisa resolver o tenant a partir do `Host` **antes** de qualquer
+`app.current_organization_id` existir (problema de ovo-e-galinha). O
+isolamento real de `organization` hoje é feito pelo `TenantMatchGuard`
+(camada de aplicação), não por RLS. Não é um bug — é um limite conhecido
+desse modelo, documentado em `rls-policies.sql`.
+
+**`SET LOCAL`**: as políticas comparam `organizationId` com
+`current_setting('app.current_organization_id', true)`. `prisma-tenant.extension.ts`
+implementa isso via `client.$transaction([...])` (forma sequencial): a
+mesma transação primeiro roda `set_config('app.current_organization_id',
+<id>, true)` (equivalente a `SET LOCAL`) e só depois a query de negócio —
+ambas garantidas na mesma conexão. Isso só tem efeito porque
+`tenantScopedPrismaClient` conecta como `clinum_app` (não-superusuário).
 
 ## Variáveis de ambiente
 
 Além das já existentes (`DATABASE_URL`, `REDIS_URL`, etc.), esta fundação
 adiciona (ver `.env.example` na raiz do monorepo):
 
-| Variável                      | Descrição                                                                                                                                     |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BETTER_AUTH_SECRET`          | Chave de assinatura/criptografia do better-auth. Gere uma por ambiente com `pnpm exec better-auth secret` — nunca reuse a de dev em produção. |
-| `BETTER_AUTH_URL`             | URL pública da própria API.                                                                                                                   |
-| `BETTER_AUTH_TRUSTED_ORIGINS` | Origens confiáveis adicionais, separadas por vírgula (suporta wildcard de subdomínio).                                                        |
+| Variável                                      | Descrição                                                                                                                                                                                                    |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BETTER_AUTH_SECRET`                          | Chave de assinatura/criptografia do better-auth. Gere uma por ambiente com `pnpm exec better-auth secret` — nunca reuse a de dev em produção.                                                                |
+| `BETTER_AUTH_URL`                             | URL pública da própria API.                                                                                                                                                                                  |
+| `BETTER_AUTH_TRUSTED_ORIGINS`                 | Origens confiáveis adicionais, separadas por vírgula (suporta wildcard de subdomínio).                                                                                                                       |
+| `POSTGRES_APP_USER` / `POSTGRES_APP_PASSWORD` | Credenciais do role Postgres restrito (`clinum_app`), usadas só por `docker-init/create-app-role.sh` na criação do role.                                                                                     |
+| `APP_DATABASE_URL`                            | String de conexão do role restrito — usada por `tenantScopedPrismaClient` para as tabelas de negócio (Patient, etc.). `DATABASE_URL` continua sendo usado por migrations/CLI e pelas tabelas de auth/tenant. |
 
 ## Rodando localmente
 

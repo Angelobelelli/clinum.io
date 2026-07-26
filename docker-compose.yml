@@ -7,10 +7,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-clinum}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
       POSTGRES_DB: ${POSTGRES_DB:-clinum}
+      # Usados só pelo script de init abaixo, pra criar o role restrito
+      # (sem SUPERUSER) que a aplicação usa nas tabelas de negócio — ver
+      # docker-init/create-app-role.sh.
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-clinum_app}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:-change-me-too}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - clinum_postgres_data:/var/lib/postgresql/data
+      - ./docker-init/create-app-role.sh:/docker-entrypoint-initdb.d/create-app-role.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-clinum}"]
       interval: 5s

@@ -100,6 +100,11 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: "postgresql://clinum:clinum_ci@localhost:5432/clinum_test?schema=public"
+      # Usuário restrito (sem SUPERUSER) usado pelas tabelas de negócio
+      # (Patient, etc.) — necessário pra Row-Level Security (ver
+      # apps/api/prisma/rls-policies.sql) ter efeito de verdade nos testes
+      # de isolamento também em CI, não só localmente.
+      APP_DATABASE_URL: "postgresql://clinum_app:clinum_app_ci@localhost:5432/clinum_test?schema=public"
       REDIS_URL: "redis://localhost:6379"
     steps:
       - uses: actions/checkout@v4
@@ -115,6 +120,21 @@ jobs:
 
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
+
+      # Cria o role Postgres restrito ANTES das migrations (mesmo script
+      # usado localmente, ver docker-init/create-app-role.sh) — assim o
+      # ALTER DEFAULT PRIVILEGES já está ativo quando as tabelas de negócio
+      # forem criadas pela migration logo abaixo.
+      - name: Criar role Postgres restrito (clinum_app)
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGPASSWORD: clinum_ci
+          POSTGRES_USER: clinum
+          POSTGRES_DB: clinum_test
+          POSTGRES_APP_USER: clinum_app
+          POSTGRES_APP_PASSWORD: clinum_app_ci
+        run: sh docker-init/create-app-role.sh
 
       - name: Gerar Prisma Client
         run: pnpm --filter @clinum/api exec prisma generate
