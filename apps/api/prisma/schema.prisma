@@ -56,6 +56,16 @@ enum MemberStatus {
   inativo
 }
 
+/// Escrito somente por modules/agenda/ (nunca pelo better-auth) — enum
+/// nativo com segurança, mesmo raciocínio de TipoVinculo/MemberStatus.
+enum AgendamentoStatus {
+  agendado
+  confirmado
+  realizado
+  cancelado
+  falta
+}
+
 model User {
   id            String       @id
   name          String
@@ -143,6 +153,8 @@ model Organization {
   invitations          Invitation[]
   patients             Patient[]
   patientHealthRecords PatientHealthRecord[]
+  agendamentos         Agendamento[]
+  agendamentoAuditLogs AgendamentoAuditLog[]
 
   @@unique([slug])
   @@unique([customDomain])
@@ -160,6 +172,8 @@ model Member {
 
   tipoVinculo TipoVinculo?
   status      MemberStatus @default(ativo)
+
+  agendamentos Agendamento[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -215,6 +229,7 @@ model Patient {
   dadosVerticais Json?
 
   healthRecord PatientHealthRecord?
+  agendamentos Agendamento[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -257,6 +272,92 @@ model PatientHealthRecord {
   @@unique([patientId, organizationId])
   @@index([organizationId])
   @@map("patient_health_record")
+}
+
+/// Agendamento de atendimento — primeira feature operacional do produto
+/// (ver modules/agenda/). Vincula um Patient a um Member (profissionalId:
+/// o profissional responsável) num intervalo de tempo.
+///
+/// DECISÃO DE MODELAGEM (dataHoraFim): ainda não existe, no produto, um
+/// model de Serviço/Procedimento com duração própria — então, por ora,
+/// dataHoraFim é informado diretamente pelo cliente na criação/atualização
+/// (não calculado a partir de duração de serviço). Validado em Zod
+/// (modules/agenda/dto/) apenas para garantir dataHoraFim > dataHoraInicio.
+/// Quando existir um model de Serviço com duração, essa é a versão a
+/// migrar para calcular dataHoraFim = dataHoraInicio + duração.
+///
+/// status é enum nativo do Postgres (AgendamentoStatus) porque, diferente
+/// de role/vertical/plano, é escrito somente pela nossa própria camada de
+/// aplicação (modules/agenda/), nunca pelas rotas de escrita do
+/// better-auth — ver nota no topo deste arquivo.
+///
+/// A regra de não-choque de horário (mesmo profissional, mesmo intervalo,
+/// status agendado/confirmado) é aplicada em modules/agenda/domain/, não
+/// no banco — não há constraint de exclusão no Postgres para isso nesta
+/// primeira versão.
+///
+/// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
+/// (rls-policies.sql). Use sempre o client tenant-scoped (AgendaService),
+/// nunca o PrismaService cru.
+model Agendamento {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // "profissional" = Member responsável pelo atendimento (staff, na
+  // maioria dos casos). Nome do campo em português de propósito, como o
+  // resto do domínio de negócio (nome/cpf/telefone em Patient).
+  profissionalId String
+  profissional   Member @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+
+  dataHoraInicio DateTime
+  dataHoraFim    DateTime
+
+  status     AgendamentoStatus @default(agendado)
+  observacao String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  // Suporta a busca de conflitos de horário (mesmo profissional, mesmo
+  // tenant) feita em modules/agenda/domain/.
+  @@index([organizationId, profissionalId, dataHoraInicio])
+  @@map("agendamento")
+}
+
+/// Auditoria de TENANT da reversão de estado terminal de Agendamento (ver
+/// AgendaService.reverter(), modules/agenda/) — diferente de AdminAuditLog
+/// (abaixo), que é cross-tenant/da administração da PLATAFORMA.
+///
+/// agendamentoId e adminUserId são Strings simples, sem @relation — mesmo
+/// raciocínio de AdminAuditLog: um registro de auditoria não deve
+/// depender de FK/cascade do que ele audita (o Agendamento ou o User
+/// podem, em tese, deixar de existir um dia; o log tem que sobreviver).
+///
+/// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
+/// (rls-policies.sql).
+model AgendamentoAuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  agendamentoId String
+  adminUserId   String
+
+  statusAnterior AgendamentoStatus
+  statusNovo     AgendamentoStatus
+
+  motivo String
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([agendamentoId])
+  @@map("agendamento_audit_log")
 }
 
 /// Auditoria de ações da administração da PLATAFORMA (dono do SaaS,

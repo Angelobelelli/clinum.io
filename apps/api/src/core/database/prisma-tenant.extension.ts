@@ -8,7 +8,8 @@ import { getCurrentTenantId } from '../tenant/tenant-context';
 const TENANT_SCOPED_MODELS = new Set<string>([
   'Patient',
   'PatientHealthRecord',
-  // 'Appointment',
+  'Agendamento',
+  'AgendamentoAuditLog',
 ]);
 
 const FILTERABLE_OPERATIONS = new Set([
@@ -139,6 +140,6 @@ export const prismaTenantExtension = Prisma.defineExtension((client) =>
  *    await tenantScopedPrismaClient.appointment.findMany();
  *    // equivalente a: findMany({ where: { organizationId: <tenant atual> } })
  *
- * Ver Patient/PatientHealthRecord (modules/patients/) como o exemplo real já
- * em produção desse padrão.
+ * Ver Patient/PatientHealthRecord (modules/patients/) e Agendamento
+ * (modules/agenda/) como exemplos reais já em produção desse padrão.
  */

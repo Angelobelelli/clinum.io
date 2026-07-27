@@ -4,16 +4,18 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './core/database/database.module';
+import { PrismaExceptionFilter } from './core/error-handling/prisma-exception.filter';
 import { TenantMatchGuard } from './core/tenant/tenant-match.guard';
 import { TenantMiddleware } from './core/tenant/tenant.middleware';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
 import { MembersModule } from './modules/members/members.module';
 import { PatientsModule } from './modules/patients/patients.module';
+import { AgendaModule } from './modules/agenda/agenda.module';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { PatientsModule } from './modules/patients/patients.module';
     PlatformAdminModule,
     MembersModule,
     PatientsModule,
+    AgendaModule,
   ],
   controllers: [AppController],
   providers: [
@@ -29,6 +32,10 @@ import { PatientsModule } from './modules/patients/patients.module';
     {
       provide: APP_GUARD,
       useClass: TenantMatchGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: PrismaExceptionFilter,
     },
   ],
 })

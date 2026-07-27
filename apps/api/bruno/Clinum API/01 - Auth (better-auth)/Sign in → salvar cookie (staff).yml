@@ -1,0 +1,46 @@
+info:
+  name: Sign in → salvar cookie (staff)
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/sign-in/email'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: '{{trustedOrigin}}'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "staff@clinicateste.com",
+        "password": "SenhaForte123!"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "const raw = bru.cookies.get('better-auth.session_token');\r
+
+        if (raw) {\r
+
+        \  bru.setCollectionVar('cookie_staff', 'better-auth.session_token=' + raw);\r
+
+        \  console.log('cookie_staff atualizado');\r
+
+        } else {\r
+
+        \  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Loga e salva o cookie em {{cookie_staff}} — precisa já existir como Member com role=staff em alguma organização (ver 02 - Invite member / 04 - Update member role).

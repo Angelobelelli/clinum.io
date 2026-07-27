@@ -1,0 +1,46 @@
+info:
+  name: Sign in → salvar cookie (reception)
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/sign-in/email'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: '{{trustedOrigin}}'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "reception@clinicateste.com",
+        "password": "SenhaForte123!"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "const raw = bru.cookies.get('better-auth.session_token');\r
+
+        if (raw) {\r
+
+        \  bru.setCollectionVar('cookie_reception', 'better-auth.session_token=' + raw);\r
+
+        \  console.log('cookie_reception atualizado');\r
+
+        } else {\r
+
+        \  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Loga e salva o cookie em {{cookie_reception}} — precisa já existir como Member com role=reception em alguma organização.

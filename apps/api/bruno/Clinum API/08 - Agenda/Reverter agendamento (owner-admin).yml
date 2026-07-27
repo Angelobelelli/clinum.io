@@ -1,0 +1,31 @@
+info:
+  name: Reverter agendamento (owner/admin)
+  type: http
+  seq: 6
+
+http:
+  method: PATCH
+  url: '{{baseUrl}}/agendamentos/{{testAgendamentoId}}/reverter'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: X-Tenant-Slug
+      value: '{{tenantSlug1}}'
+    - name: Cookie
+      value: '{{cookie_owner1}}'
+  body:
+    type: json
+    data: |-
+      {
+        "novoStatus": "confirmado",
+        "motivo": "Cliente ligou pedindo pra remarcar no mesmo horário"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Único jeito de tirar um agendamento de estado terminal (cancelado/realizado/falta) — exclusivo de owner/admin (403 se {{cookie_staff}}/{{cookie_reception}} tentarem). 409 se o agendamento NÃO estiver em estado terminal (nada a reverter). novoStatus só aceita "agendado" ou "confirmado" (400 se mandar "cancelado" — nunca permitido, nem revertendo um "realizado"). motivo é obrigatório, mínimo 10 caracteres. Revalida choque de horário antes de confirmar. Toda chamada bem-sucedida grava um registro em AgendamentoAuditLog.

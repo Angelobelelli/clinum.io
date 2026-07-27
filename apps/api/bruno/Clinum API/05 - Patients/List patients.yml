@@ -1,0 +1,22 @@
+info:
+  name: List patients
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: '{{baseUrl}}/patients'
+  headers:
+    - name: X-Tenant-Slug
+      value: '{{tenantSlug1}}'
+    - name: Cookie
+      value: '{{cookie_owner1}}'
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Nunca traz pacientes de outra organização — troque X-Tenant-Slug pra {{tenantSlug2}} (com Cookie {{cookie_owner2}}) pra confirmar isolamento.

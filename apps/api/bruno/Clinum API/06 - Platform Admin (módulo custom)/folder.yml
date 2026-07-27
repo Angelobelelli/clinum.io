@@ -1,0 +1,11 @@
+info:
+  name: 06 - Platform Admin (módulo custom)
+  type: folder
+  seq: 7
+
+request:
+  auth: inherit
+
+docs:
+  content: PlatformAdminController (apps/api/src/modules/platform-admin/) — exige platformRole = super_admin. Cross-tenant por definição; isento de TenantMiddleware/TenantMatchGuard (sem X-Tenant-Slug). Toda chamada aqui grava uma linha em AdminAuditLog.
+  type: text/markdown

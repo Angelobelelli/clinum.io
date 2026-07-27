@@ -1,0 +1,82 @@
+opencollection: 1.0.0
+
+info:
+  name: Clinum API
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ''
+      port: ''
+      auth:
+        username: ''
+        password: ''
+      bypassProxy: ''
+
+request:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3001
+    - name: trustedOrigin
+      value: http://localhost:3000
+    - name: cookie_superadmin
+      value: ''
+    - name: cookie_owner1
+      value: ''
+    - name: cookie_owner2
+      value: ''
+    - name: cookie_staff
+      value: ''
+    - name: cookie_reception
+      value: ''
+    - name: tenantSlug1
+      value: clinica-teste
+    - name: tenantSlug2
+      value: outra-clinica
+    - name: testUserId
+      value: ''
+    - name: testOrganizationId
+      value: ''
+    - name: testMemberId
+      value: ''
+    - name: testPatientId
+      value: ''
+    - name: invitationId
+      value: ''
+    - name: sessionToken
+      value: ''
+    - name: testProfissionalId
+      value: ''
+    - name: testProfissionalId2
+      value: ''
+    - name: testAgendamentoId
+      value: ''
+
+docs:
+  content: |-
+    Rotas da fundação de auth/multi-tenant/plataforma do Clinum.
+
+    IMPORTANTE — cookies de sessão: NÃO dependemos mais do Cookie Manager automático do Postman. Ele guarda só UM cookie por domínio, então logar como uma conta nova sobrescreve a sessão anterior — péssimo quando você precisa testar várias contas ao mesmo tempo (super_admin, dono da clínica 1, dono da clínica 2, staff, reception).
+
+    Em vez disso: os requests de 'Sign in' em 01 - Auth têm um script (aba Scripts → Post-response) que captura o cookie da resposta e salva numa VARIÁVEL da collection (cookie_superadmin, cookie_owner1, cookie_owner2, cookie_staff, cookie_reception). Todo outro request usa `Cookie: {{cookie_X}}` explicitamente no header — assim várias sessões convivem ao mesmo tempo, sem precisar logar de novo toda vez que troca de conta.
+
+    Origin: o better-auth exige o header Origin em qualquer requisição pra /api/auth/* que já carregue algum cookie (mesmo tentando logar como outra conta) — por isso toda rota /api/auth/* aqui já manda `Origin: {{trustedOrigin}}` por padrão, pra nunca cair nesse erro (MISSING_OR_NULL_ORIGIN) à toa.
+
+    Variáveis (defina/ajuste no Environment 'Clinum - Local' ou direto na collection):
+    - baseUrl: http://localhost:3001
+    - trustedOrigin: http://localhost:3000 (precisa bater com BETTER_AUTH_TRUSTED_ORIGINS do .env)
+    - cookie_superadmin / cookie_owner1 / cookie_owner2 / cookie_staff / cookie_reception: preenchidos automaticamente pelos requests de Sign in (01 - Auth)
+    - tenantSlug1 / tenantSlug2: slugs das duas organizações que você estiver usando pra testar isolamento
+    - testUserId / testOrganizationId / testMemberId / testPatientId / invitationId / sessionToken: preenchidos manualmente conforme for testando (copie das respostas anteriores)
+    - testProfissionalId / testProfissionalId2: Member.id de dois profissionais (staff) distintos — usados como profissionalId em 08 - Agenda pra testar a regra de choque de horário (mesmo profissional bloqueia, profissionais diferentes não)
+    - testAgendamentoId: id do agendamento retornado por 08 - Agenda › Create agendamento
+
+    Endpoints de /api/auth/* são gerados automaticamente pelo better-auth (ver apps/api/src/core/auth/auth.ts) — não são controllers Nest nossos, mas fazem parte da API da mesma forma.
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

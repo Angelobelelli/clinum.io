@@ -1,0 +1,20 @@
+info:
+  name: List organizations (do usuário logado)
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: '{{baseUrl}}/api/auth/organization/list'
+  headers:
+    - name: Origin
+      value: '{{trustedOrigin}}'
+    - name: Cookie
+      value: '{{cookie_owner1}}'
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

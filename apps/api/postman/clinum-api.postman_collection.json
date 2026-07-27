@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Clinum API",
-    "description": "Rotas da fundação de auth/multi-tenant/plataforma do Clinum.\n\nIMPORTANTE — cookies de sessão: NÃO dependemos mais do Cookie Manager automático do Postman. Ele guarda só UM cookie por domínio, então logar como uma conta nova sobrescreve a sessão anterior — péssimo quando você precisa testar várias contas ao mesmo tempo (super_admin, dono da clínica 1, dono da clínica 2, staff, reception).\n\nEm vez disso: os requests de 'Sign in' em 01 - Auth têm um script (aba Scripts → Post-response) que captura o cookie da resposta e salva numa VARIÁVEL da collection (cookie_superadmin, cookie_owner1, cookie_owner2, cookie_staff, cookie_reception). Todo outro request usa `Cookie: {{cookie_X}}` explicitamente no header — assim várias sessões convivem ao mesmo tempo, sem precisar logar de novo toda vez que troca de conta.\n\nOrigin: o better-auth exige o header Origin em qualquer requisição pra /api/auth/* que já carregue algum cookie (mesmo tentando logar como outra conta) — por isso toda rota /api/auth/* aqui já manda `Origin: {{trustedOrigin}}` por padrão, pra nunca cair nesse erro (MISSING_OR_NULL_ORIGIN) à toa.\n\nVariáveis (defina/ajuste no Environment 'Clinum - Local' ou direto na collection):\n- baseUrl: http://localhost:3001\n- trustedOrigin: http://localhost:3000 (precisa bater com BETTER_AUTH_TRUSTED_ORIGINS do .env)\n- cookie_superadmin / cookie_owner1 / cookie_owner2 / cookie_staff / cookie_reception: preenchidos automaticamente pelos requests de Sign in (01 - Auth)\n- tenantSlug1 / tenantSlug2: slugs das duas organizações que você estiver usando pra testar isolamento\n- testUserId / testOrganizationId / testMemberId / testPatientId / invitationId / sessionToken: preenchidos manualmente conforme for testando (copie das respostas anteriores)\n\nEndpoints de /api/auth/* são gerados automaticamente pelo better-auth (ver apps/api/src/core/auth/auth.ts) — não são controllers Nest nossos, mas fazem parte da API da mesma forma.",
+    "description": "Rotas da fundação de auth/multi-tenant/plataforma do Clinum.\n\nIMPORTANTE — cookies de sessão: NÃO dependemos mais do Cookie Manager automático do Postman. Ele guarda só UM cookie por domínio, então logar como uma conta nova sobrescreve a sessão anterior — péssimo quando você precisa testar várias contas ao mesmo tempo (super_admin, dono da clínica 1, dono da clínica 2, staff, reception).\n\nEm vez disso: os requests de 'Sign in' em 01 - Auth têm um script (aba Scripts → Post-response) que captura o cookie da resposta e salva numa VARIÁVEL da collection (cookie_superadmin, cookie_owner1, cookie_owner2, cookie_staff, cookie_reception). Todo outro request usa `Cookie: {{cookie_X}}` explicitamente no header — assim várias sessões convivem ao mesmo tempo, sem precisar logar de novo toda vez que troca de conta.\n\nOrigin: o better-auth exige o header Origin em qualquer requisição pra /api/auth/* que já carregue algum cookie (mesmo tentando logar como outra conta) — por isso toda rota /api/auth/* aqui já manda `Origin: {{trustedOrigin}}` por padrão, pra nunca cair nesse erro (MISSING_OR_NULL_ORIGIN) à toa.\n\nVariáveis (defina/ajuste no Environment 'Clinum - Local' ou direto na collection):\n- baseUrl: http://localhost:3001\n- trustedOrigin: http://localhost:3000 (precisa bater com BETTER_AUTH_TRUSTED_ORIGINS do .env)\n- cookie_superadmin / cookie_owner1 / cookie_owner2 / cookie_staff / cookie_reception: preenchidos automaticamente pelos requests de Sign in (01 - Auth)\n- tenantSlug1 / tenantSlug2: slugs das duas organizações que você estiver usando pra testar isolamento\n- testUserId / testOrganizationId / testMemberId / testPatientId / invitationId / sessionToken: preenchidos manualmente conforme for testando (copie das respostas anteriores)\n- testProfissionalId / testProfissionalId2: Member.id de dois profissionais (staff) distintos — usados como profissionalId em 08 - Agenda pra testar a regra de choque de horário (mesmo profissional bloqueia, profissionais diferentes não)\n- testAgendamentoId: id do agendamento retornado por 08 - Agenda › Create agendamento\n\nEndpoints de /api/auth/* são gerados automaticamente pelo better-auth (ver apps/api/src/core/auth/auth.ts) — não são controllers Nest nossos, mas fazem parte da API da mesma forma.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,7 +19,10 @@
     { "key": "testMemberId", "value": "" },
     { "key": "testPatientId", "value": "" },
     { "key": "invitationId", "value": "" },
-    { "key": "sessionToken", "value": "" }
+    { "key": "sessionToken", "value": "" },
+    { "key": "testProfissionalId", "value": "" },
+    { "key": "testProfissionalId2", "value": "" },
+    { "key": "testAgendamentoId", "value": "" }
   ],
   "item": [
     {
@@ -949,6 +952,132 @@
               "raw": "{\n  \"permission\": { \"user\": [\"impersonate\"] }\n}"
             },
             "description": "Checa se a sessão atual (ou role informada) tem a permissão de plataforma indicada — útil pra debugar por que um super_admin não conseguiu fazer algo."
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Agenda",
+      "description": "AgendaController (apps/api/src/modules/agenda/) — agendamento de atendimento (patientId + profissionalId + intervalo). Regras: (1) choque de horário — não deixa criar/remarcar dois agendamentos sobrepostos pro mesmo profissional (cancelado não conta); (2) controle de acesso — owner/admin têm acesso total; reception cria/lê/atualiza/cancela de QUALQUER profissional mas NUNCA marca status (realizado/falta); staff só acessa os PRÓPRIOS agendamentos (profissionalId == o próprio Member), inclusive na criação; (3) estado terminal — cancelado/realizado/falta são TERMINAIS: update/cancelar/status retornam 409 se o agendamento já estiver em um desses três; só \"Reverter agendamento\" (abaixo, exclusivo de owner/admin) tira dele um estado terminal, e grava um registro em AgendamentoAuditLog a cada uso. Todos os requests aqui precisam de X-Tenant-Slug. Use testProfissionalId = Member.id de um staff (ver 02 - Invite member + Get session/list-members pra descobrir o id) e testPatientId de 05 - Patients.",
+      "item": [
+        {
+          "name": "Create agendamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agendamentos",
+              "host": ["{{baseUrl}}"],
+              "path": ["agendamentos"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{testPatientId}}\",\n  \"profissionalId\": \"{{testProfissionalId}}\",\n  \"dataHoraInicio\": \"2026-09-01T10:00:00.000Z\",\n  \"dataHoraFim\": \"2026-09-01T11:00:00.000Z\",\n  \"observacao\": \"Primeira consulta\"\n}"
+            },
+            "description": "dataHoraFim precisa ser depois de dataHoraInicio (400 se não for). 409 se já existir um agendamento agendado/confirmado sobreposto pro mesmo profissionalId. Troque Cookie pra {{cookie_reception}} pra criar em nome de qualquer profissional, ou pra {{cookie_staff}} — nesse caso profissionalId TEM que ser o Member.id do próprio staff (403 se for de outro profissional)."
+          }
+        },
+        {
+          "name": "List agendamentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agendamentos?data=2026-09-01&profissionalId={{testProfissionalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["agendamentos"],
+              "query": [
+                { "key": "data", "value": "2026-09-01" },
+                { "key": "profissionalId", "value": "{{testProfissionalId}}" }
+              ]
+            },
+            "description": "Filtros opcionais: data (YYYY-MM-DD, filtra pelo dia inteiro) e profissionalId. Troque Cookie pra {{cookie_staff}} pra confirmar que ele só vê os próprios agendamentos, mesmo sem passar profissionalId (o filtro por profissionalId da query é ignorado nesse caso)."
+          }
+        },
+        {
+          "name": "Update agendamento (remarcar)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agendamentos/{{testAgendamentoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["agendamentos", "{{testAgendamentoId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataHoraInicio\": \"2026-09-01T14:00:00.000Z\",\n  \"dataHoraFim\": \"2026-09-01T15:00:00.000Z\"\n}"
+            },
+            "description": "Todos os campos são opcionais (partial do create). Revalida choque de horário se dataHoraInicio/dataHoraFim/profissionalId mudarem. 403 se {{cookie_staff}} tentar mexer num agendamento que não é o próprio. 404 se testAgendamentoId for de outra organização."
+          }
+        },
+        {
+          "name": "Cancelar agendamento",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agendamentos/{{testAgendamentoId}}/cancelar",
+              "host": ["{{baseUrl}}"],
+              "path": ["agendamentos", "{{testAgendamentoId}}", "cancelar"]
+            },
+            "description": "Muda status pra \"cancelado\" (não deleta o registro). Um agendamento cancelado libera o horário — o mesmo intervalo/profissional pode ser reagendado depois. reception também consegue chamar isso pra qualquer profissional."
+          }
+        },
+        {
+          "name": "Marcar status (realizado/falta)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agendamentos/{{testAgendamentoId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["agendamentos", "{{testAgendamentoId}}", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"realizado\"\n}"
+            },
+            "description": "status aceita só \"realizado\" ou \"falta\" (cancelamento tem endpoint próprio, ver acima). 403 se {{cookie_reception}} tentar chamar isso — reception não marca desfecho de atendimento (decisão de modelagem, ver access-control.ts). {{cookie_staff}} só marca os próprios. 409 se o agendamento já estiver em estado terminal (cancelado/realizado/falta) — use \"Reverter agendamento\" abaixo pra tirar dele um estado terminal antes de tentar de novo."
+          }
+        },
+        {
+          "name": "Reverter agendamento (owner/admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-Slug", "value": "{{tenantSlug1}}" },
+              { "key": "Cookie", "value": "{{cookie_owner1}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agendamentos/{{testAgendamentoId}}/reverter",
+              "host": ["{{baseUrl}}"],
+              "path": ["agendamentos", "{{testAgendamentoId}}", "reverter"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"novoStatus\": \"confirmado\",\n  \"motivo\": \"Cliente ligou pedindo pra remarcar no mesmo horário\"\n}"
+            },
+            "description": "Único jeito de tirar um agendamento de estado terminal (cancelado/realizado/falta) — exclusivo de owner/admin (403 se {{cookie_staff}}/{{cookie_reception}} tentarem). 409 se o agendamento NÃO estiver em estado terminal (nada a reverter). novoStatus só aceita \"agendado\" ou \"confirmado\" (400 se mandar \"cancelado\" — nunca permitido aqui, nem revertendo um \"realizado\"). motivo é obrigatório, mínimo 10 caracteres (400 se faltar ou for curto). Revalida choque de horário antes de confirmar — 409 se o horário tiver sido ocupado por outro agendamento enquanto este estava em estado terminal. Toda chamada bem-sucedida grava um registro em AgendamentoAuditLog (organizationId, agendamentoId, adminUserId, statusAnterior, statusNovo, motivo)."
           }
         }
       ]

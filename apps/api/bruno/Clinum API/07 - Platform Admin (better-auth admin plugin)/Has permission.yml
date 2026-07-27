@@ -1,0 +1,30 @@
+info:
+  name: Has permission
+  type: http
+  seq: 14
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/admin/has-permission'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: '{{trustedOrigin}}'
+    - name: Cookie
+      value: '{{cookie_superadmin}}'
+  body:
+    type: json
+    data: |-
+      {
+        "permission": { "user": ["impersonate"] }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Checa se a sessão atual (ou role informada) tem a permissão de plataforma indicada — útil pra debugar por que um super_admin não conseguiu fazer algo.

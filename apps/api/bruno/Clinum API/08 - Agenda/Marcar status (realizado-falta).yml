@@ -1,0 +1,30 @@
+info:
+  name: Marcar status (realizado/falta)
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: '{{baseUrl}}/agendamentos/{{testAgendamentoId}}/status'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: X-Tenant-Slug
+      value: '{{tenantSlug1}}'
+    - name: Cookie
+      value: '{{cookie_owner1}}'
+  body:
+    type: json
+    data: |-
+      {
+        "status": "realizado"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: status aceita só "realizado" ou "falta" (cancelamento tem endpoint próprio, ver acima). 403 se {{cookie_reception}} tentar chamar isso — reception não marca desfecho de atendimento (decisão de modelagem, ver access-control.ts). {{cookie_staff}} só marca os próprios.

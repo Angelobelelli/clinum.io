@@ -89,6 +89,36 @@ CREATE POLICY patient_health_record_tenant_isolation ON "patient_health_record"
   WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
 
 -- -----------------------------------------------------------------------------
+-- Tabela: agendamento
+--
+-- Primeira feature realmente operacional do produto (ver modules/agenda/).
+-- Mesmo padrão de patient/patient_health_record: acessada via
+-- tenantScopedPrismaClient, policy tem efeito de verdade.
+-- -----------------------------------------------------------------------------
+
+ALTER TABLE "agendamento" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "agendamento" FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY agendamento_tenant_isolation ON "agendamento"
+  USING ("organizationId" = current_setting('app.current_organization_id', true))
+  WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
+
+-- -----------------------------------------------------------------------------
+-- Tabela: agendamento_audit_log
+--
+-- Auditoria de TENANT da reversão de estado terminal de Agendamento (ver
+-- AgendaService.reverter(), modules/agenda/) — diferente de admin_audit_log
+-- (fora deste bloco), que é cross-tenant/da administração da PLATAFORMA.
+-- -----------------------------------------------------------------------------
+
+ALTER TABLE "agendamento_audit_log" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "agendamento_audit_log" FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY agendamento_audit_log_tenant_isolation ON "agendamento_audit_log"
+  USING ("organizationId" = current_setting('app.current_organization_id', true))
+  WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
+
+-- -----------------------------------------------------------------------------
 -- MODELO PARA TABELAS DE NEGÓCIO FUTURAS
 --
 -- Toda nova tabela de negócio (agenda, financeiro, etc.) deve ter uma
