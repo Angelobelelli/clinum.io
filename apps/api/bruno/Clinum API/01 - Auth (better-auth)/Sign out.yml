@@ -1,0 +1,22 @@
+info:
+  name: Sign out
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/sign-out'
+  headers:
+    - name: Origin
+      value: '{{trustedOrigin}}'
+    - name: Cookie
+      value: '{{cookie_owner1}}'
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Troque o header Cookie pra sessão que você quer encerrar.

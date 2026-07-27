@@ -1,0 +1,46 @@
+info:
+  name: Sign in → salvar cookie (dono clínica 2)
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/sign-in/email'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: '{{trustedOrigin}}'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "dono2@outraclinica.com",
+        "password": "SenhaForte456!"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "const raw = bru.cookies.get('better-auth.session_token');\r
+
+        if (raw) {\r
+
+        \  bru.setCollectionVar('cookie_owner2', 'better-auth.session_token=' + raw);\r
+
+        \  console.log('cookie_owner2 atualizado');\r
+
+        } else {\r
+
+        \  console.warn('Nenhum cookie de sessão veio na resposta — sign-in falhou?');\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Loga e salva o cookie em {{cookie_owner2}} — dono da organização em {{tenantSlug2}}.

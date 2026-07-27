@@ -218,6 +218,28 @@ describe('Patients (e2e)', () => {
     expect(response.body).toMatchObject({ message: 'Validation failed' });
   });
 
+  it('rejeita CPF duplicado na mesma organização com 409 (não 500 cru do Prisma)', async () => {
+    const cpf = `${Date.now()}`.slice(0, 11);
+
+    await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(org.slug))
+      .set('Cookie', ownerSessionCookie)
+      .send({ nome: 'Paciente CPF Duplicado 1', cpf })
+      .expect(201);
+
+    const response = await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(org.slug))
+      .set('Cookie', ownerSessionCookie)
+      .send({ nome: 'Paciente CPF Duplicado 2', cpf });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toMatchObject({
+      message: 'Já existe um registro com esse valor único.',
+    });
+  });
+
   it('401 sem sessão nenhuma', async () => {
     const response = await request(app.getHttpServer())
       .get('/patients')

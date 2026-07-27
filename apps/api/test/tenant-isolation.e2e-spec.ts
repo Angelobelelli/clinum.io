@@ -38,6 +38,11 @@ interface PatientResponseBody {
   nome: string;
 }
 
+interface AgendamentoResponseBody {
+  id: string;
+  organizationId: string;
+}
+
 describe('Isolamento multi-tenant (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -46,6 +51,7 @@ describe('Isolamento multi-tenant (e2e)', () => {
   let orgB: { id: string; slug: string };
   let sessionCookie: string;
   let sessionCookieOrgB: string;
+  let orgAOwnerMemberId: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -98,9 +104,10 @@ describe('Isolamento multi-tenant (e2e)', () => {
     // better-auth) porque, nesta fase, ainda não montamos esse fluxo — o
     // que importa aqui é testar TenantMiddleware + TenantMatchGuard, não o
     // plugin Organization em si.
+    orgAOwnerMemberId = randomUUID();
     await prisma.db.member.create({
       data: {
-        id: randomUUID(),
+        id: orgAOwnerMemberId,
         organizationId: orgA.id,
         userId,
         role: 'owner',
@@ -230,5 +237,102 @@ describe('Isolamento multi-tenant (e2e)', () => {
     const patient = response.body as PatientResponseBody;
     expect(patient.organizationId).toBe(orgA.id);
     expect(patient.organizationId).not.toBe(orgB.id);
+  });
+
+  it('não deve retornar agendamentos de outro tenant ao listar', async () => {
+    const patientResponse = await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({ nome: 'Paciente da Org A (agenda)' })
+      .expect(201);
+    const patientId = (patientResponse.body as PatientResponseBody).id;
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/agendamentos')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({
+        patientId,
+        profissionalId: orgAOwnerMemberId,
+        dataHoraInicio: '2026-11-01T10:00:00.000Z',
+        dataHoraFim: '2026-11-01T11:00:00.000Z',
+      })
+      .expect(201);
+    const agendamentoA = createResponse.body as AgendamentoResponseBody;
+
+    const listAsOrgB = await request(app.getHttpServer())
+      .get('/agendamentos')
+      .set('Host', hostFor(orgB.slug))
+      .set('Cookie', sessionCookieOrgB)
+      .expect(200);
+
+    const idsVisiveisParaOrgB = (
+      listAsOrgB.body as AgendamentoResponseBody[]
+    ).map((a) => a.id);
+    expect(idsVisiveisParaOrgB).not.toContain(agendamentoA.id);
+  });
+
+  it('não deve permitir atualizar/cancelar um agendamento de outro tenant pelo ID (404, não 200/403)', async () => {
+    const patientResponse = await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({ nome: 'Paciente da Org A (agenda 2)' })
+      .expect(201);
+    const patientId = (patientResponse.body as PatientResponseBody).id;
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/agendamentos')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({
+        patientId,
+        profissionalId: orgAOwnerMemberId,
+        dataHoraInicio: '2026-11-02T10:00:00.000Z',
+        dataHoraFim: '2026-11-02T11:00:00.000Z',
+      })
+      .expect(201);
+    const agendamentoA = createResponse.body as AgendamentoResponseBody;
+
+    const updateResponse = await request(app.getHttpServer())
+      .patch(`/agendamentos/${agendamentoA.id}`)
+      .set('Host', hostFor(orgB.slug))
+      .set('Cookie', sessionCookieOrgB)
+      .send({ observacao: 'tentando mexer em agendamento de outro tenant' });
+    expect(updateResponse.status).toBe(404);
+
+    const cancelarResponse = await request(app.getHttpServer())
+      .patch(`/agendamentos/${agendamentoA.id}/cancelar`)
+      .set('Host', hostFor(orgB.slug))
+      .set('Cookie', sessionCookieOrgB);
+    expect(cancelarResponse.status).toBe(404);
+  });
+
+  it('não deve permitir criar um agendamento apontando organizationId de outro tenant', async () => {
+    const patientResponse = await request(app.getHttpServer())
+      .post('/patients')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({ nome: 'Paciente da Org A (agenda 3)' })
+      .expect(201);
+    const patientId = (patientResponse.body as PatientResponseBody).id;
+
+    const response = await request(app.getHttpServer())
+      .post('/agendamentos')
+      .set('Host', hostFor(orgA.slug))
+      .set('Cookie', sessionCookie)
+      .send({
+        patientId,
+        profissionalId: orgAOwnerMemberId,
+        dataHoraInicio: '2026-11-03T10:00:00.000Z',
+        dataHoraFim: '2026-11-03T11:00:00.000Z',
+        organizationId: orgB.id,
+      })
+      .expect(201);
+
+    const agendamento = response.body as AgendamentoResponseBody;
+    expect(agendamento.organizationId).toBe(orgA.id);
+    expect(agendamento.organizationId).not.toBe(orgB.id);
   });
 });

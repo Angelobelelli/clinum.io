@@ -1,0 +1,22 @@
+info:
+  name: Stop impersonating
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/admin/stop-impersonating'
+  headers:
+    - name: Origin
+      value: '{{trustedOrigin}}'
+    - name: Cookie
+      value: '{{cookie_superadmin}}'
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Use o cookie de impersonation (não o do super_admin original) pra voltar à sessão original dele.

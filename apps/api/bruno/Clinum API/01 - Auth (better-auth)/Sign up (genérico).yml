@@ -1,0 +1,30 @@
+info:
+  name: Sign up (genérico)
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/sign-up/email'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: '{{trustedOrigin}}'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "novo-usuario@clinum.io",
+        "password": "SenhaForte123!",
+        "name": "Novo Usuário"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Cria um usuário novo. A resposta traz `role` (não `platformRole`) — o better-auth sempre expõe esse campo com esse nome na API/JSON, mesmo a coluna no Postgres sendo `platformRole` (ver apps/api/src/core/auth/platform-role.ts). Novo usuário sempre nasce com platformRole = "user".

@@ -1,0 +1,30 @@
+info:
+  name: Remove user
+  type: http
+  seq: 13
+
+http:
+  method: POST
+  url: '{{baseUrl}}/api/auth/admin/remove-user'
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Origin
+      value: '{{trustedOrigin}}'
+    - name: Cookie
+      value: '{{cookie_superadmin}}'
+  body:
+    type: json
+    data: |-
+      {
+        "userId": "{{testUserId}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Cuidado — deleta o usuário de verdade. Use só com usuários de teste.
