@@ -157,6 +157,31 @@ describe('Members — tipoVinculo/status e validação (e2e)', () => {
     expect(response.status).toBe(403);
   });
 
+  it('qualquer papel autenticado consegue listar os members da própria organização', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/members')
+      .set('Host', hostFor(org.slug))
+      .set('Cookie', staffSessionCookie)
+      .expect(200);
+
+    const body = response.body as {
+      data: { id: string; role: string }[];
+      meta: { total: number };
+    };
+    const idsRetornados = body.data.map((m) => m.id);
+    expect(idsRetornados).toContain(ownerMemberId);
+    expect(idsRetornados).toContain(staffMemberId);
+    expect(body.meta.total).toBeGreaterThanOrEqual(2);
+  });
+
+  it('401 ao listar members sem sessão nenhuma', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/members')
+      .set('Host', hostFor(org.slug));
+
+    expect(response.status).toBe(401);
+  });
+
   it('rejeita vertical fora da lista permitida ao criar organização', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/auth/organization/create')
