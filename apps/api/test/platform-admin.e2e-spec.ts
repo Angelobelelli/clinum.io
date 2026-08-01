@@ -140,9 +140,9 @@ describe('Administração de plataforma (e2e)', () => {
       .set('Cookie', superAdminSessionCookie);
 
     expect(response.status).toBe(200);
-    const ids = (response.body as OrganizationResponseBody[]).map(
-      (org) => org.id,
-    );
+    const ids = (
+      response.body as { data: OrganizationResponseBody[] }
+    ).data.map((org) => org.id);
     expect(ids).toEqual(expect.arrayContaining([orgA.id, orgB.id]));
   });
 
