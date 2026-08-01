@@ -311,8 +311,8 @@ describe('Agenda (e2e)', () => {
         .expect(200);
 
       const profissionaisRetornados = (
-        response.body as AgendamentoResponseBody[]
-      ).map((a) => a.profissionalId);
+        response.body as { data: AgendamentoResponseBody[] }
+      ).data.map((a) => a.profissionalId);
       expect(profissionaisRetornados.every((id) => id === staffAMemberId)).toBe(
         true,
       );
@@ -326,7 +326,7 @@ describe('Agenda (e2e)', () => {
         .expect(200);
 
       const profissionaisRetornados = new Set(
-        (response.body as AgendamentoResponseBody[]).map(
+        (response.body as { data: AgendamentoResponseBody[] }).data.map(
           (a) => a.profissionalId,
         ),
       );

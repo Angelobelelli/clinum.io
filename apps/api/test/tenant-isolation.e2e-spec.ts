@@ -198,9 +198,9 @@ describe('Isolamento multi-tenant (e2e)', () => {
       .set('Cookie', sessionCookieOrgB)
       .expect(200);
 
-    const idsVisiveisParaOrgB = (listAsOrgB.body as PatientResponseBody[]).map(
-      (p) => p.id,
-    );
+    const idsVisiveisParaOrgB = (
+      listAsOrgB.body as { data: PatientResponseBody[] }
+    ).data.map((p) => p.id);
     expect(idsVisiveisParaOrgB).not.toContain(patientA.id);
   });
 
@@ -268,8 +268,8 @@ describe('Isolamento multi-tenant (e2e)', () => {
       .expect(200);
 
     const idsVisiveisParaOrgB = (
-      listAsOrgB.body as AgendamentoResponseBody[]
-    ).map((a) => a.id);
+      listAsOrgB.body as { data: AgendamentoResponseBody[] }
+    ).data.map((a) => a.id);
     expect(idsVisiveisParaOrgB).not.toContain(agendamentoA.id);
   });
 

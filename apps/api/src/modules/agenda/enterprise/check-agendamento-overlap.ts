@@ -5,7 +5,7 @@
  * Deliberadamente sem nenhuma dependência de Nest/Prisma — recebe só datas
  * e retorna um resultado, pra ser testável isoladamente (ver
  * check-agendamento-overlap.spec.ts) e reutilizável tanto na criação quanto
- * na atualização/remarcação (AgendaService é responsável por buscar os
+ * na atualização/remarcação (os use-cases são responsáveis por buscar os
  * agendamentos existentes do profissional — já filtrados por tenant e por
  * status agendado/confirmado — e passar pra cá).
  */
