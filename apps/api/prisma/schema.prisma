@@ -155,6 +155,7 @@ model Organization {
   patientHealthRecords PatientHealthRecord[]
   agendamentos         Agendamento[]
   agendamentoAuditLogs AgendamentoAuditLog[]
+  servicos             Servico[]
 
   @@unique([slug])
   @@unique([customDomain])
@@ -272,6 +273,31 @@ model PatientHealthRecord {
   @@unique([patientId, organizationId])
   @@index([organizationId])
   @@map("patient_health_record")
+}
+
+/// Catálogo de serviços/procedimentos oferecidos pela organização — preço
+/// (em centavos) e duração ainda SEM relação com Agendamento nesta
+/// primeira versão (ver nota em Agendamento.dataHoraFim sobre o cálculo a
+/// partir de duração de serviço ficar para uma versão futura).
+///
+/// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
+/// (rls-policies.sql). Use sempre o client tenant-scoped, nunca o
+/// PrismaService cru.
+model Servico {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  nome           String
+  duracaoMinutos Int
+  preco          Int
+  ativo          Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("servico")
 }
 
 /// Agendamento de atendimento — primeira feature operacional do produto

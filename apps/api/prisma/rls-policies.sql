@@ -119,6 +119,22 @@ CREATE POLICY agendamento_audit_log_tenant_isolation ON "agendamento_audit_log"
   WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
 
 -- -----------------------------------------------------------------------------
+-- Tabela: servico
+--
+-- Catálogo de serviços/procedimentos oferecidos pela organização — ainda
+-- SEM relação com agendamento nesta primeira versão. Mesmo padrão de
+-- patient/agendamento: acessada via tenantScopedPrismaClient, policy tem
+-- efeito de verdade.
+-- -----------------------------------------------------------------------------
+
+ALTER TABLE "servico" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "servico" FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY servico_tenant_isolation ON "servico"
+  USING ("organizationId" = current_setting('app.current_organization_id', true))
+  WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
+
+-- -----------------------------------------------------------------------------
 -- MODELO PARA TABELAS DE NEGÓCIO FUTURAS
 --
 -- Toda nova tabela de negócio (agenda, financeiro, etc.) deve ter uma

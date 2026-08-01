@@ -10,6 +10,7 @@ const TENANT_SCOPED_MODELS = new Set<string>([
   'PatientHealthRecord',
   'Agendamento',
   'AgendamentoAuditLog',
+  'Servico',
 ]);
 
 const FILTERABLE_OPERATIONS = new Set([
