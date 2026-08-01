@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: '{{baseUrl}}/api/auth/admin/list-users?limit=20'
+  url: '{{baseUrl}}/api/auth/admin/list-users?limit=20&perPage=1'
   headers:
     - name: Origin
       value: '{{trustedOrigin}}'
@@ -14,6 +14,9 @@ http:
   params:
     - name: limit
       value: '20'
+      type: query
+    - name: perPage
+      value: '1'
       type: query
   auth: inherit
 

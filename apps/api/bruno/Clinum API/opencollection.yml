@@ -21,15 +21,15 @@ request:
     - name: trustedOrigin
       value: http://localhost:3000
     - name: cookie_superadmin
-      value: ''
+      value: better-auth.session_token=iKIxuLgX3J9WQYw5wP2mIMhb2wWmOEUC.itsqiefNWqaA7SVIx18nVHpVHTJGSnWwpjdo0QjTr3k%3D
     - name: cookie_owner1
-      value: ''
+      value: better-auth.session_token=t4U0wJCNZCaW3KORx5NGIFiGCLUVZMdk.fJDm%2FWk5TXKZvArRvS1ZVoVDQyiDeKO6Q1sfBCxzuyw%3D
     - name: cookie_owner2
-      value: ''
+      value: better-auth.session_token=t9xh1FEv918XtVGz23U8a1HUoWmzrb7i.yA62BQeSMSq2HbN0gcA6CjZdyf5yE92Ij%2FGxZTYUYi4%3D
     - name: cookie_staff
-      value: ''
+      value: better-auth.session_token=YxBLvxg5L3li89GFkCOmHHur4KhmeXXZ.Ru1KuxdphpJbOqD5UBnn4HXNQGJ52t%2BVoK9RvP42qJ8%3D
     - name: cookie_reception
-      value: ''
+      value: better-auth.session_token=IlnzknnmrGlHF7iEodxTk1cDmdis7jiF.MHmQvwhOjPEikKBsBm0ZQtqsUt9t53GYliFdSQHevKA%3D
     - name: tenantSlug1
       value: clinica-teste
     - name: tenantSlug2
@@ -41,17 +41,17 @@ request:
     - name: testMemberId
       value: ''
     - name: testPatientId
-      value: ''
+      value: cms1519kd0000hsup2eu68dkj
     - name: invitationId
       value: ''
     - name: sessionToken
       value: ''
     - name: testProfissionalId
-      value: ''
+      value: wIoUIDIFwV3jm4feVrsJX7lsVwANnICw
     - name: testProfissionalId2
       value: ''
     - name: testAgendamentoId
-      value: ''
+      value: cms2juseo0000lgups3qw7cnk
 
 docs:
   content: |-

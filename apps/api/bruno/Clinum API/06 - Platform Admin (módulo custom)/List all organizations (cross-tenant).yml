@@ -9,6 +9,11 @@ http:
   headers:
     - name: Cookie
       value: '{{cookie_superadmin}}'
+  params:
+    - name: page
+      value: ''
+      type: query
+      disabled: true
   auth: inherit
 
 settings:

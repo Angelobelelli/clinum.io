@@ -18,6 +18,14 @@ http:
     - name: profissionalId
       value: '{{testProfissionalId}}'
       type: query
+    - name: page
+      value: '1'
+      type: query
+      disabled: true
+    - name: perPage
+      value: '20'
+      type: query
+      disabled: true
   auth: inherit
 
 settings:

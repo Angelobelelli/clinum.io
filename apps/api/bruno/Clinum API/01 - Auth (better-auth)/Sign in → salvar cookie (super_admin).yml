@@ -15,8 +15,8 @@ http:
     type: json
     data: |-
       {
-        "email": "angelo@clinum.io",
-        "password": "SuaSenhaForte123"
+        "email": "admin@local.test",
+        "password": "SuaSenhaNova123!"
       }
   auth: inherit
 

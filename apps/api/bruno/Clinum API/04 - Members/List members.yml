@@ -1,0 +1,32 @@
+info:
+  name: List members
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: '{{baseUrl}}/members?page=1&perPage=20'
+  headers:
+    - name: X-Tenant-Slug
+      value: '{{tenantSlug2}}'
+    - name: Cookie
+      value: '{{cookie_owner2}}'
+  params:
+    - name: page
+      value: '1'
+      type: query
+    - name: perPage
+      value: '20'
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Lista os members da organização atual — resposta paginada, formato { data: [...], meta: { page, perPage, total, totalPages } }. Qualquer papel autenticado pode chamar (owner/admin/staff/reception), não só owner/admin como em "Update tipoVinculo/status".
+
+  Cada item tem o Member.id — é ESSE valor (não o userId) que vai em profissionalId ao criar um agendamento (ver 08 - Agenda › Create agendamento). Troque Cookie pra {{cookie_staff}} ou {{cookie_reception}} pra listar como outro papel.
