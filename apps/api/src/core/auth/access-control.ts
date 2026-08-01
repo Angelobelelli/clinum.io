@@ -13,9 +13,10 @@ import { defaultStatements } from 'better-auth/plugins/organization/access';
  * o próprio Member) é uma restrição de LINHA, que o sistema ac do
  * better-auth (boolean, por role) não modela. Ela é reforçada na camada de
  * aplicação, em modules/agenda/agenda.service.ts, usando o mesmo
- * mecanismo de "caller member anexado à request" já usado pelo módulo
- * patients (ver AgendaPermissionGuard/AgendaCallerMember) — o mais
- * próximo do padrão existente que faz sentido pra esse tipo de restrição.
+ * mecanismo de "caller member anexado à request" usado por todos os
+ * módulos (ver core/auth/permission.guard.ts e permission-request.ts) —
+ * o mais próximo do padrão existente que faz sentido pra esse tipo de
+ * restrição.
  */
 export const statement = {
   ...defaultStatements,

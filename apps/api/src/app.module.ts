@@ -8,6 +8,7 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './core/database/database.module';
+import { PermissionGuard } from './core/auth/permission.guard';
 import { PrismaExceptionFilter } from './core/error-handling/prisma-exception.filter';
 import { TenantMatchGuard } from './core/tenant/tenant-match.guard';
 import { TenantMiddleware } from './core/tenant/tenant.middleware';
@@ -32,6 +33,10 @@ import { AgendaModule } from './modules/agenda/agenda.module';
     {
       provide: APP_GUARD,
       useClass: TenantMatchGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
     },
     {
       provide: APP_FILTER,
