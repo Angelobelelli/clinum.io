@@ -58,5 +58,9 @@ apps/api/generated/
 # overrides locais de docker-compose (podem conter config específica da máquina)
 docker-compose.override.yml
 
+# bruno (collection local de testes manuais da API — guarda cookies de
+# sessão e outros valores de ambiente locais, não deve ser versionada)
+apps/api/bruno/
+
 .agents
 .claude
