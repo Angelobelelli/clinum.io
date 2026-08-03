@@ -21,7 +21,7 @@ export interface CreateServicoUseCaseResponse {
 }
 
 @Injectable()
-export class CreateServicoUseCase {
+export class CreateServicosUseCase {
   constructor(private readonly servicosRepository: ServicosRepository) {}
 
   async execute(
