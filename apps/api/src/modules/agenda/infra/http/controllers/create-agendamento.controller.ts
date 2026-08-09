@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
-import { RequirePermission } from '../../../../../core/auth/permission.decorator';
-import type { PermissionRequest } from '../../../../../core/auth/permission-request';
-import { ZodValidationPipe } from '../../../../../core/validation/zod-validation.pipe';
+import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
+import type { PermissionRequest } from '../../../../../infra/auth/permission-request';
+import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
 import { CreateAgendamentoUseCase } from '../../../application/use-cases/create-agendamento';
 import { createAgendamentoSchema } from '../../../dto/create-agendamento.schema';
 import type { CreateAgendamentoInput } from '../../../dto/create-agendamento.schema';

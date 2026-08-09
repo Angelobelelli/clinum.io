@@ -1,15 +1,17 @@
 # core
 
-Infraestrutura transversal da aplicação — código do qual todo o resto depende,
-mas que não é, em si, uma regra de negócio.
+Kernel de domínio, agnóstico de framework/infra — nada aqui importa Nest,
+Prisma ou better-auth. É o mesmo tipo de código que `enterprise/`/`application/`
+de cada módulo de negócio (ver `src/modules/*`) reutilizam:
 
-Planejado para viver aqui conforme o projeto evolui:
+- **entities/** — `Entity`/`UniqueEntityID`, base para as entidades de domínio
+  de cada módulo
+- **either.ts** — `Either<L, R>`, usado nos use-cases para erros de negócio
+  esperados
+- **pagination/** — tipos/schema de paginação compartilhados
+- **env/** — schema Zod de variáveis de ambiente, validado no carregamento do
+  módulo
 
-- **tenant/** — resolução e contexto de tenant (multi-tenancy)
-- **auth/** — autenticação e autorização
-- **database/** — módulo Prisma/conexão com o Postgres, guards de tenant no
-  nível de dados
-- **queue/** — configuração de filas (BullMQ/Redis) e workers
-
-Nada disso está implementado ainda — esta pasta existe apenas para reservar o
-lugar na arquitetura.
+Infraestrutura transversal de verdade (Prisma, better-auth, resolução de
+tenant, auditoria, filtro de exceção, pipes HTTP) vive em `src/infra/`, não
+aqui — só entra em `core/` o que não depende de nenhum framework/driver.

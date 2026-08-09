@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { PrismaService } from '../database/prisma.service';
+import { env } from '../../core/env/env';
 import { runWithTenantContext } from './tenant-context';
 
 /**
@@ -67,7 +68,7 @@ export class TenantMiddleware implements NestMiddleware {
   }
 
   private getDevSlugOverride(req: Request): string | null {
-    if (process.env.NODE_ENV !== 'development') {
+    if (env.NODE_ENV !== 'development') {
       return null;
     }
     const header = req.headers['x-tenant-slug'];

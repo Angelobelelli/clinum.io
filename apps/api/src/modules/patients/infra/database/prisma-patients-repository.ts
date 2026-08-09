@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { TenantScopedPrismaService } from '../../../../core/database/tenant-scoped-prisma.service';
+import { TenantScopedPrismaService } from '../../../../infra/database/tenant-scoped-prisma.service';
 import {
   FindManyPatientsParams,
   PatientsRepository,

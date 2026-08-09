@@ -1,6 +1,6 @@
 import { Controller, Param, Patch, Req } from '@nestjs/common';
-import { RequirePermission } from '../../../../../core/auth/permission.decorator';
-import type { PermissionRequest } from '../../../../../core/auth/permission-request';
+import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
+import type { PermissionRequest } from '../../../../../infra/auth/permission-request';
 import { CancelAgendamentoUseCase } from '../../../application/use-cases/cancel-agendamento';
 import { agendamentoErrorToHttpException } from '../agendamento-error-mapper';
 import { AgendamentoPresenter } from '../presenters/agendamento-presenter';

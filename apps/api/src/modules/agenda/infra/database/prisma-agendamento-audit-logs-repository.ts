@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TenantScopedPrismaService } from '../../../../core/database/tenant-scoped-prisma.service';
+import { TenantScopedPrismaService } from '../../../../infra/database/tenant-scoped-prisma.service';
 import { AgendamentoAuditLog } from '../../enterprise/entities/agendamento-audit-log';
 import { AgendamentoAuditLogsRepository } from '../../application/repositories/agendamento-audit-logs-repository';
 import { PrismaAgendamentoAuditLogMapper } from './mappers/prisma-agendamento-audit-log-mapper';

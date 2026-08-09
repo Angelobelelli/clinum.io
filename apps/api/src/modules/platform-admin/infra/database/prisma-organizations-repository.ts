@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { PrismaService } from '../../../../core/database/prisma.service';
+import { PrismaService } from '../../../../infra/database/prisma.service';
 import { Organization } from '../../enterprise/entities/organization';
 import {
   FindManyOrganizationsParams,

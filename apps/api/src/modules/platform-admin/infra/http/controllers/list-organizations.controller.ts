@@ -8,8 +8,8 @@ import {
 import { paginationQuerySchema } from '../../../../../core/pagination/pagination-query.schema';
 import type { PaginationQuery } from '../../../../../core/pagination/pagination-query.schema';
 import { toPaginatedHTTP } from '../../../../../core/pagination/to-paginated-http';
-import { SkipTenantMatch } from '../../../../../core/tenant/skip-tenant-match.decorator';
-import { ZodValidationPipe } from '../../../../../core/validation/zod-validation.pipe';
+import { SkipTenantMatch } from '../../../../../infra/tenant/skip-tenant-match.decorator';
+import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
 import { ListOrganizationsUseCase } from '../../../application/use-cases/list-organizations';
 import { PlatformAdminAction } from '../../../audit-log/platform-admin-action.decorator';
 import { PlatformAdminAuditInterceptor } from '../../../audit-log/platform-admin-audit.interceptor';

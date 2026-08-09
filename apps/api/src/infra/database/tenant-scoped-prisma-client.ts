@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../../generated/prisma/client';
+import { env } from '../../core/env/env';
 import { prismaTenantExtension } from './prisma-tenant.extension';
 
 /**
@@ -23,7 +24,7 @@ import { prismaTenantExtension } from './prisma-tenant.extension';
  * conexão que de fato respeita RLS no banco.
  */
 const adapter = new PrismaPg({
-  connectionString: process.env.APP_DATABASE_URL,
+  connectionString: env.APP_DATABASE_URL,
 });
 
 export const tenantScopedPrismaClient = new PrismaClient({ adapter }).$extends(

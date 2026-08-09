@@ -1,9 +1,9 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { RequirePermission } from '../../../../../core/auth/permission.decorator';
+import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
 import { paginationQuerySchema } from '../../../../../core/pagination/pagination-query.schema';
 import type { PaginationQuery } from '../../../../../core/pagination/pagination-query.schema';
 import { toPaginatedHTTP } from '../../../../../core/pagination/to-paginated-http';
-import { ZodValidationPipe } from '../../../../../core/validation/zod-validation.pipe';
+import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
 import { ListPatientsUseCase } from '../../../application/use-cases/list-patients';
 import { PatientPresenter } from '../presenters/patient-presenter';
 

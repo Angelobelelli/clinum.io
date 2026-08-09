@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, concatMap, from, map } from 'rxjs';
-import { recordAdminAuditLog } from '../../../core/audit/admin-audit-log';
+import { recordAdminAuditLog } from '../../../infra/audit/admin-audit-log';
 import type { PlatformAdminRequest } from '../platform-admin-request';
 import { PLATFORM_ADMIN_ACTION_KEY } from './platform-admin-action.decorator';
 

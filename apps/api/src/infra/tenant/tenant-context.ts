@@ -31,7 +31,7 @@ export function getCurrentTenantId(): string {
   if (!context) {
     throw new Error(
       'getCurrentTenantId() foi chamada fora de um contexto de tenant resolvido. ' +
-        'Certifique-se de que a requisição passou pelo TenantMiddleware (apps/api/src/core/tenant/tenant.middleware.ts) ' +
+        'Certifique-se de que a requisição passou pelo TenantMiddleware (apps/api/src/infra/tenant/tenant.middleware.ts) ' +
         'antes de chegar aqui.',
     );
   }

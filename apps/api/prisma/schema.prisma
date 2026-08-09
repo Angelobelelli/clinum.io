@@ -58,6 +58,7 @@ enum MemberStatus {
 
 /// Escrito somente por modules/agenda/ (nunca pelo better-auth) — enum
 /// nativo com segurança, mesmo raciocínio de TipoVinculo/MemberStatus.
+
 enum AgendamentoStatus {
   agendado
   confirmado
@@ -283,6 +284,7 @@ model PatientHealthRecord {
 /// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
 /// (rls-policies.sql). Use sempre o client tenant-scoped, nunca o
 /// PrismaService cru.
+
 model Servico {
   id             String       @id @default(cuid())
   organizationId String
@@ -325,6 +327,7 @@ model Servico {
 /// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
 /// (rls-policies.sql). Use sempre o client tenant-scoped (AgendaService),
 /// nunca o PrismaService cru.
+
 model Agendamento {
   id             String       @id @default(cuid())
   organizationId String
@@ -348,9 +351,9 @@ model Agendamento {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([organizationId])
   // Suporta a busca de conflitos de horário (mesmo profissional, mesmo
   // tenant) feita em modules/agenda/domain/.
+  @@index([organizationId])
   @@index([organizationId, profissionalId, dataHoraInicio])
   @@map("agendamento")
 }
@@ -366,6 +369,7 @@ model Agendamento {
 ///
 /// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
 /// (rls-policies.sql).
+
 model AgendamentoAuditLog {
   id             String       @id @default(cuid())
   organizationId String
@@ -408,4 +412,14 @@ model AdminAuditLog {
   @@index([targetOrganizationId])
   @@index([targetUserId])
   @@map("admin_audit_log")
+}
+
+model RateLimit {
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
+
+  @@unique([key])
+  @@map("rateLimit")
 }

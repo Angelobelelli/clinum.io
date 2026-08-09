@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { PrismaService } from '../../../../core/database/prisma.service';
-import { getCurrentTenantId } from '../../../../core/tenant/tenant-context';
+import { PrismaService } from '../../../../infra/database/prisma.service';
+import { getCurrentTenantId } from '../../../../infra/tenant/tenant-context';
 import { Member } from '../../enterprise/entities/member';
 import {
   FindManyMembersParams,

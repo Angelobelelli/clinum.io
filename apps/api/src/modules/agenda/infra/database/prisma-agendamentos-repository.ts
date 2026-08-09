@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../../../../../generated/prisma/client';
 import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { TenantScopedPrismaService } from '../../../../core/database/tenant-scoped-prisma.service';
+import { TenantScopedPrismaService } from '../../../../infra/database/tenant-scoped-prisma.service';
 import {
   Agendamento,
   STATUS_QUE_BLOQUEIAM_HORARIO,

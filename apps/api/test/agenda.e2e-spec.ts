@@ -5,8 +5,8 @@ import { json, urlencoded } from 'express';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
-import { mountBetterAuth } from '../src/core/auth/mount-auth';
-import { PrismaService } from '../src/core/database/prisma.service';
+import { mountBetterAuth } from '../src/infra/auth/mount-auth';
+import { PrismaService } from '../src/infra/database/prisma.service';
 
 /**
  * Testes do módulo agenda (apps/api/src/modules/agenda/) — CRUD básico,

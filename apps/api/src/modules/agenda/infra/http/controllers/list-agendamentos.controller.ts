@@ -1,8 +1,8 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
-import { RequirePermission } from '../../../../../core/auth/permission.decorator';
-import type { PermissionRequest } from '../../../../../core/auth/permission-request';
+import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
+import type { PermissionRequest } from '../../../../../infra/auth/permission-request';
 import { toPaginatedHTTP } from '../../../../../core/pagination/to-paginated-http';
-import { ZodValidationPipe } from '../../../../../core/validation/zod-validation.pipe';
+import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
 import { ListAgendamentosUseCase } from '../../../application/use-cases/list-agendamentos';
 import { listAgendamentosQuerySchema } from '../../../dto/list-agendamentos-query.schema';
 import type { ListAgendamentosQuery } from '../../../dto/list-agendamentos-query.schema';

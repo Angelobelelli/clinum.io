@@ -8,9 +8,9 @@ import {
 } from '@nestjs/common';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { Request } from 'express';
-import { auth } from '../../core/auth/auth';
-import { PrismaService } from '../../core/database/prisma.service';
-import { getCurrentTenantId } from '../../core/tenant/tenant-context';
+import { auth } from '../../infra/auth/auth';
+import { PrismaService } from '../../infra/database/prisma.service';
+import { getCurrentTenantId } from '../../infra/tenant/tenant-context';
 
 const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
 

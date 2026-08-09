@@ -3,6 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { admin as adminPlugin, organization } from 'better-auth/plugins';
 import { recordAdminAuditLog } from '../audit/admin-audit-log';
 import { prismaClient } from '../database/prisma-client';
+import { env } from '../../core/env/env';
 import {
   ac,
   admin as orgAdmin,
@@ -26,25 +27,68 @@ import { PLATFORM_SUPER_ADMIN_ROLE } from './platform-role';
  * /api/auth/*, ver auth.controller.ts) quanto pelo CLI do better-auth para
  * gerar o schema do Prisma:
  *
- *   pnpm exec better-auth generate --config src/core/auth/auth.ts
+ *   pnpm exec better-auth generate --config src/infra/auth/auth.ts
  */
 export const auth = betterAuth({
   database: prismaAdapter(prismaClient, { provider: 'postgresql' }),
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
   basePath: '/api/auth',
   // Cada Organization pode ter seu próprio subdomínio (slug) ou domínio
   // customizado (customDomain) — ambos precisam ser aceitos como origem
   // confiável para cookies/CSRF. Lista estática por enquanto; validar
   // customDomain dinamicamente contra o banco fica para quando o proxy
   // de domínio for implementado.
-  trustedOrigins: (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? '')
-    .split(',')
+  trustedOrigins: env.BETTER_AUTH_TRUSTED_ORIGINS.split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
   emailAndPassword: {
     enabled: true,
   },
+  rateLimit: {
+    // O better-auth só habilita rate limit por padrão quando
+    // NODE_ENV === 'production' (enabled: options.rateLimit?.enabled ??
+    // isProduction). Precisa desse `enabled: true` explícito para valer
+    // também em dev/test.
+    enabled: true,
+    // Regra global (aplica a qualquer rota de /api/auth/* que não tenha
+    // uma regra específica abaixo em customRules). 100 req/60s é o
+    // suficiente para uso normal (checagem de sessão, refresh, etc) sem
+    // travar usuário legítimo.
+    window: 60,
+    max: 5,
+    // Servidor único sempre ligado (não é serverless) ⇒ dá pra guardar o
+    // contador direto no Postgres via Prisma, sem precisar de Redis.
+    // Rode `pnpm exec better-auth generate --config src/infra/auth/auth.ts`
+    // depois dessa mudança para criar o model `rateLimit` no schema.prisma,
+    // e então gere/aplique a migration do Prisma normalmente.
+    storage: 'database',
+    customRules: {
+      // Login: alvo clássico de brute force / credential stuffing.
+      '/sign-in/email': { window: 60, max: 5 },
+
+      // Cadastro: evita criação em massa de contas/organizações.
+      '/sign-up/email': { window: 60, max: 5 },
+
+      // Esqueci minha senha: limite baixo evita spam de e-mail e
+      // enumeração de quais e-mails têm conta cadastrada.
+      '/forget-password': { window: 60, max: 3 },
+      '/reset-password': { window: 60, max: 5 },
+
+      // Troca de e-mail: sensível, mas usada raramente por um mesmo usuário.
+      '/change-email': { window: 60, max: 3 },
+
+      // Aceitar convite de organização: token de convite não deveria
+      // poder ser tentado (guessing) repetidamente.
+      '/organization/accept-invitation': { window: 60, max: 10 },
+
+      // Impersonation é uma ação de altíssimo privilégio (super_admin da
+      // plataforma agindo como qualquer usuário) — limita tentativas por
+      // minuto mesmo vindas de uma conta já autenticada como admin.
+      '/admin/impersonate-user': { window: 60, max: 5 },
+    },
+  },
+
   // Hook de baixo nível do better-auth (não é específico de nenhum plugin).
   // Toda sessão de impersonation criada pelo plugin `admin` (ver abaixo) sai
   // do endpoint POST /api/auth/admin/impersonate-user com

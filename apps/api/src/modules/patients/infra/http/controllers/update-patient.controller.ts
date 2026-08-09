@@ -1,6 +1,6 @@
 import { Body, Controller, Param, Patch } from '@nestjs/common';
-import { RequirePermission } from '../../../../../core/auth/permission.decorator';
-import { ZodValidationPipe } from '../../../../../core/validation/zod-validation.pipe';
+import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
+import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
 import { UpdatePatientUseCase } from '../../../application/use-cases/update-patient';
 import { updatePatientSchema } from '../../../dto/update-patient.schema';
 import type { UpdatePatientInput } from '../../../dto/update-patient.schema';

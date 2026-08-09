@@ -6,7 +6,7 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { ZodValidationPipe } from '../../../../../core/validation/zod-validation.pipe';
+import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
 import { UpdateMemberVinculoUseCase } from '../../../application/use-cases/update-member-vinculo';
 import { updateMemberVinculoSchema } from '../../../dto/update-member-vinculo.schema';
 import type { UpdateMemberVinculoInput } from '../../../dto/update-member-vinculo.schema';

@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { RequirePermission } from '../../../../../core/auth/permission.decorator';
+import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
 import { GetPatientUseCase } from '../../../application/use-cases/get-patient';
 import { patientErrorToHttpException } from '../patient-error-mapper';
 import { PatientPresenter } from '../presenters/patient-presenter';

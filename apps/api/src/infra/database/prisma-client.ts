@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../../generated/prisma/client';
+import { env } from '../../core/env/env';
 
 /**
  * Client Prisma "cru" (sem a extension de isolamento de tenant), usado por
@@ -9,6 +10,6 @@ import { PrismaClient } from '../../../generated/prisma/client';
  * Para queries de negócio, prefira o client exportado por
  * `prisma-tenant.extension.ts` assim que ele existir.
  */
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 
 export const prismaClient = new PrismaClient({ adapter });

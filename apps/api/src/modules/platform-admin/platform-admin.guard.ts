@@ -6,8 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from '../../core/auth/auth';
-import { isPlatformSuperAdmin } from '../../core/auth/platform-role';
+import { auth } from '../../infra/auth/auth';
+import { isPlatformSuperAdmin } from '../../infra/auth/platform-role';
 import type { PlatformAdminRequest } from './platform-admin-request';
 
 /**

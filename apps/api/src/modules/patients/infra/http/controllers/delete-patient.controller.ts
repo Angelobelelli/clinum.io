@@ -1,5 +1,5 @@
 import { Controller, Delete, Param } from '@nestjs/common';
-import { RequirePermission } from '../../../../../core/auth/permission.decorator';
+import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
 import { DeletePatientUseCase } from '../../../application/use-cases/delete-patient';
 import { patientErrorToHttpException } from '../patient-error-mapper';
 

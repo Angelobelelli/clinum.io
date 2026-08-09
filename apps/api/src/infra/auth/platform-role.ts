@@ -2,7 +2,7 @@
  * Papel de PLATAFORMA (dono do SaaS, acesso cross-tenant) — via plugin
  * `admin` do better-auth. Conceito completamente diferente de Member.role
  * (papel de alguém DENTRO de uma organização/cliente, ver
- * apps/api/src/core/auth/access-control.ts).
+ * apps/api/src/infra/auth/access-control.ts).
  *
  * O plugin `admin` do better-auth 1.4.21 sempre expõe este dado como
  * `user.role` na API/tipos da própria lib (auth.api.setRole,
