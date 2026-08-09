@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
-import { HealthRecordNotFoundError } from '../../application/use-cases/errors/health-record-not-found-error';
-import { PatientNotFoundError } from '../../application/use-cases/errors/patient-not-found-error';
+import { HealthRecordNotFoundError } from '@/modules/patients/application/use-cases/errors/health-record-not-found-error';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
 
 /**
  * Compartilhado pelos controllers de patients (um por ação, ver

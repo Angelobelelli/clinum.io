@@ -1,5 +1,5 @@
-import { Prisma } from '../../../generated/prisma/client';
-import { getCurrentTenantId } from '../tenant/tenant-context';
+import { Prisma } from '@generated/prisma/client';
+import { getCurrentTenantId } from '@/infra/tenant/tenant-context';
 
 /**
  * Models de negócio que possuem a coluna `organizationId` e que, portanto,

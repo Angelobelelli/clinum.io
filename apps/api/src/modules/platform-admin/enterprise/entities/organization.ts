@@ -1,5 +1,5 @@
-import { Entity } from '../../../../core/entities/entity';
-import { UniqueEntityID } from '../../../../core/entities/unique-entity-id';
+import { Entity } from '@/core/entities/entity';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 
 /**
  * Visão de Organization própria do platform-admin — só leitura (este módulo

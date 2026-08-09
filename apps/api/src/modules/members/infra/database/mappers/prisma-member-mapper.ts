@@ -1,9 +1,6 @@
-import type {
-  Prisma,
-  Member as PrismaMember,
-} from '../../../../../../generated/prisma/client';
-import { UniqueEntityID } from '../../../../../core/entities/unique-entity-id';
-import { Member } from '../../../enterprise/entities/member';
+import type { Prisma, Member as PrismaMember } from '@generated/prisma/client';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
+import { Member } from '@/modules/members/enterprise/entities/member';
 
 export class PrismaMemberMapper {
   static toDomain(raw: PrismaMember): Member {

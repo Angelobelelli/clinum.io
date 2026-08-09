@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
-import { Organization } from '../../enterprise/entities/organization';
-import { OrganizationsRepository } from '../repositories/organizations-repository';
-import { OrganizationNotFoundError } from './errors/organization-not-found-error';
+import { Either, left, right } from '@/core/either';
+import { Organization } from '@/modules/organizations/enterprise/entities/organization';
+import { OrganizationsRepository } from '@/modules/organizations/application/repositories/organizations-repository';
+import { OrganizationNotFoundError } from '@/modules/organizations/application/use-cases/errors/organization-not-found-error';
 
 export interface GetCurrentOrganizationUseCaseRequest {
   organizationId: string;

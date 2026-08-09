@@ -1,7 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../../../generated/prisma/client';
-import { env } from '../../core/env/env';
-import { prismaTenantExtension } from './prisma-tenant.extension';
+import { PrismaClient } from '@generated/prisma/client';
+import { env } from '@/core/env/env';
+import { prismaTenantExtension } from '@/infra/database/prisma-tenant.extension';
 
 /**
  * Client Prisma dedicado às tabelas de NEGÓCIO (Patient, PatientHealthRecord,

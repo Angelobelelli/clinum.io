@@ -1,7 +1,7 @@
-import { makePatient } from '../../../../test/factories/make-patient';
-import { InMemoryPatientsRepository } from '../../../../test/repositories/in-memory-patients-repository';
-import { PatientNotFoundError } from './errors/patient-not-found-error';
-import { GetPatientUseCase } from './get-patient';
+import { makePatient } from '@/test/factories/make-patient';
+import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
+import { GetPatientUseCase } from '@/modules/patients/application/use-cases/get-patient';
 
 describe('GetPatientUseCase', () => {
   let patientsRepository: InMemoryPatientsRepository;

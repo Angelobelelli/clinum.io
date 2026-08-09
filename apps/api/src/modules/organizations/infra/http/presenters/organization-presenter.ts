@@ -1,4 +1,4 @@
-import { Organization } from '../../../enterprise/entities/organization';
+import { Organization } from '@/modules/organizations/enterprise/entities/organization';
 
 /**
  * Achata a entidade de volta pro mesmo formato de linha que o Prisma

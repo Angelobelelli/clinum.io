@@ -1,8 +1,8 @@
-import { UniqueEntityID } from '../../core/entities/unique-entity-id';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import {
   PatientHealthRecord,
   PatientHealthRecordProps,
-} from '../../modules/patients/enterprise/entities/patient-health-record';
+} from '@/modules/patients/enterprise/entities/patient-health-record';
 
 export function makePatientHealthRecord(
   override: Partial<PatientHealthRecordProps> = {},

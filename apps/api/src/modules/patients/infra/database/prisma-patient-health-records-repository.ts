@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { TenantScopedPrismaService } from '../../../../infra/database/tenant-scoped-prisma.service';
-import { PatientHealthRecordsRepository } from '../../application/repositories/patient-health-records-repository';
-import { PatientHealthRecord } from '../../enterprise/entities/patient-health-record';
-import { PrismaPatientHealthRecordMapper } from './mappers/prisma-patient-health-record-mapper';
+import { TenantScopedPrismaService } from '@/infra/database/tenant-scoped-prisma.service';
+import { PatientHealthRecordsRepository } from '@/modules/patients/application/repositories/patient-health-records-repository';
+import { PatientHealthRecord } from '@/modules/patients/enterprise/entities/patient-health-record';
+import { PrismaPatientHealthRecordMapper } from '@/modules/patients/infra/database/mappers/prisma-patient-health-record-mapper';
 
 @Injectable()
 export class PrismaPatientHealthRecordsRepository implements PatientHealthRecordsRepository {

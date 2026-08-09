@@ -1,5 +1,5 @@
-import { PatientHealthRecordsRepository } from '../../modules/patients/application/repositories/patient-health-records-repository';
-import { PatientHealthRecord } from '../../modules/patients/enterprise/entities/patient-health-record';
+import { PatientHealthRecordsRepository } from '@/modules/patients/application/repositories/patient-health-records-repository';
+import { PatientHealthRecord } from '@/modules/patients/enterprise/entities/patient-health-record';
 
 export class InMemoryPatientHealthRecordsRepository implements PatientHealthRecordsRepository {
   public items: PatientHealthRecord[] = [];

@@ -5,7 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { Prisma } from '../../../generated/prisma/client';
+import { Prisma } from '@generated/prisma/client';
 
 const STATUS_BY_PRISMA_CODE: Record<string, number> = {
   // Unique constraint violation (ex: patient_organizationId_cpf_key).

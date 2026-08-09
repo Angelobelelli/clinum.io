@@ -1,9 +1,9 @@
 import type {
   Prisma,
   AgendamentoAuditLog as PrismaAgendamentoAuditLog,
-} from '../../../../../../generated/prisma/client';
-import { UniqueEntityID } from '../../../../../core/entities/unique-entity-id';
-import { AgendamentoAuditLog } from '../../../enterprise/entities/agendamento-audit-log';
+} from '@generated/prisma/client';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
+import { AgendamentoAuditLog } from '@/modules/agenda/enterprise/entities/agendamento-audit-log';
 
 export class PrismaAgendamentoAuditLogMapper {
   static toDomain(raw: PrismaAgendamentoAuditLog): AgendamentoAuditLog {

@@ -1,9 +1,9 @@
-import { PaginatedResult } from '../../core/pagination/paginated-result';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
 import {
   FindManyOrganizationsParams,
   OrganizationsRepository,
-} from '../../modules/platform-admin/application/repositories/organizations-repository';
-import { Organization } from '../../modules/platform-admin/enterprise/entities/organization';
+} from '@/modules/platform-admin/application/repositories/organizations-repository';
+import { Organization } from '@/modules/platform-admin/enterprise/entities/organization';
 
 export class InMemoryOrganizationsRepository implements OrganizationsRepository {
   public items: Organization[] = [];

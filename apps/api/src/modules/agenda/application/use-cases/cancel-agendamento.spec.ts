@@ -1,9 +1,9 @@
-import { makeAgendamento } from '../../../../test/factories/make-agendamento';
-import { InMemoryAgendamentosRepository } from '../../../../test/repositories/in-memory-agendamentos-repository';
-import { CancelAgendamentoUseCase } from './cancel-agendamento';
-import { AgendamentoNotFoundError } from './errors/agendamento-not-found-error';
-import { AgendamentoTerminalStateError } from './errors/agendamento-terminal-state-error';
-import { NotOwnAgendamentoError } from './errors/not-own-agendamento-error';
+import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
+import { CancelAgendamentoUseCase } from '@/modules/agenda/application/use-cases/cancel-agendamento';
+import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
+import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
+import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 
 describe('CancelAgendamentoUseCase', () => {
   let agendamentosRepository: InMemoryAgendamentosRepository;

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Organization } from '../../enterprise/entities/organization';
-import { OrganizationsRepository } from '../repositories/organizations-repository';
+import { Organization } from '@/modules/organizations/enterprise/entities/organization';
+import { OrganizationsRepository } from '@/modules/organizations/application/repositories/organizations-repository';
 
 export interface CreateOrganizationUseCaseRequest {
   name: string;

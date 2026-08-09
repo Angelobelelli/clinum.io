@@ -4,9 +4,9 @@ import { Test } from '@nestjs/testing';
 import { json, urlencoded } from 'express';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
-import { mountBetterAuth } from '../src/infra/auth/mount-auth';
-import { PrismaService } from '../src/infra/database/prisma.service';
+import { AppModule } from '@/app.module';
+import { mountBetterAuth } from '@/infra/auth/mount-auth';
+import { PrismaService } from '@/infra/database/prisma.service';
 
 /**
  * Testes da migration add_member_tipo_vinculo_status_unique_constraint e

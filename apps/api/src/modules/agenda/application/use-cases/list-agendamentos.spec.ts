@@ -1,6 +1,6 @@
-import { makeAgendamento } from '../../../../test/factories/make-agendamento';
-import { InMemoryAgendamentosRepository } from '../../../../test/repositories/in-memory-agendamentos-repository';
-import { ListAgendamentosUseCase } from './list-agendamentos';
+import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
+import { ListAgendamentosUseCase } from '@/modules/agenda/application/use-cases/list-agendamentos';
 
 describe('ListAgendamentosUseCase', () => {
   let agendamentosRepository: InMemoryAgendamentosRepository;

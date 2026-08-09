@@ -1,12 +1,12 @@
-import { Either, left, right } from '../../../../../core/either';
-import { Agendamento } from '../../../enterprise/entities/agendamento';
-import { AgendamentosRepository } from '../../repositories/agendamentos-repository';
+import { Either, left, right } from '@/core/either';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
+import { AgendamentosRepository } from '@/modules/agenda/application/repositories/agendamentos-repository';
 import {
   CallerMember,
   isOwnResource,
-} from '../../policies/agenda-ownership-policy';
-import { AgendamentoNotFoundError } from '../errors/agendamento-not-found-error';
-import { NotOwnAgendamentoError } from '../errors/not-own-agendamento-error';
+} from '@/modules/agenda/application/policies/agenda-ownership-policy';
+import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
+import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 
 /**
  * Helper interno reutilizado por update/cancel/update-status/revert — não é

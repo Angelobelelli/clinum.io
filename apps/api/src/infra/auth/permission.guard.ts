@@ -7,15 +7,15 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from './auth';
-import { roleByName } from './access-control';
-import { PrismaService } from '../database/prisma.service';
-import { getCurrentTenantId } from '../tenant/tenant-context';
+import { auth } from '@/infra/auth/auth';
+import { roleByName } from '@/infra/auth/access-control';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { getCurrentTenantId } from '@/infra/tenant/tenant-context';
 import {
   PERMISSION_KEY,
   type RequiredPermission,
-} from './permission.decorator';
-import type { PermissionRequest } from './permission-request';
+} from '@/infra/auth/permission.decorator';
+import type { PermissionRequest } from '@/infra/auth/permission-request';
 
 /**
  * Guard genérico de permissão por papel (RBAC via better-auth ac/roles) —

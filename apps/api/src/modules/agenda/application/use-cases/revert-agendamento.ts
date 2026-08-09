@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
+import { Either, left, right } from '@/core/either';
 import {
   Agendamento,
   AgendamentoStatusValue,
-} from '../../enterprise/entities/agendamento';
-import { AgendamentoAuditLog } from '../../enterprise/entities/agendamento-audit-log';
-import { encontrarConflitoDeHorario } from '../../enterprise/check-agendamento-overlap';
-import { CallerMember } from '../policies/agenda-ownership-policy';
-import { AgendamentoAuditLogsRepository } from '../repositories/agendamento-audit-logs-repository';
-import { AgendamentosRepository } from '../repositories/agendamentos-repository';
-import { AgendamentoConflictError } from './errors/agendamento-conflict-error';
-import { AgendamentoNotFoundError } from './errors/agendamento-not-found-error';
-import { AgendamentoNotTerminalError } from './errors/agendamento-not-terminal-error';
-import { NotOwnAgendamentoError } from './errors/not-own-agendamento-error';
-import { findOwnedAgendamento } from './shared/find-owned-agendamento';
-import { toAgendamentoExistente } from './shared/to-agendamento-existente';
+} from '@/modules/agenda/enterprise/entities/agendamento';
+import { AgendamentoAuditLog } from '@/modules/agenda/enterprise/entities/agendamento-audit-log';
+import { encontrarConflitoDeHorario } from '@/modules/agenda/enterprise/check-agendamento-overlap';
+import { CallerMember } from '@/modules/agenda/application/policies/agenda-ownership-policy';
+import { AgendamentoAuditLogsRepository } from '@/modules/agenda/application/repositories/agendamento-audit-logs-repository';
+import { AgendamentosRepository } from '@/modules/agenda/application/repositories/agendamentos-repository';
+import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
+import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
+import { AgendamentoNotTerminalError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-terminal-error';
+import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
+import { findOwnedAgendamento } from '@/modules/agenda/application/use-cases/shared/find-owned-agendamento';
+import { toAgendamentoExistente } from '@/modules/agenda/application/use-cases/shared/to-agendamento-existente';
 
 // organizationId placeholder: ver mesmo padrão em create-agendamento.ts.
 const ORGANIZATION_ID_PLACEHOLDER = '';

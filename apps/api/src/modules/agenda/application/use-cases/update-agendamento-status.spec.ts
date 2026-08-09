@@ -1,7 +1,7 @@
-import { makeAgendamento } from '../../../../test/factories/make-agendamento';
-import { InMemoryAgendamentosRepository } from '../../../../test/repositories/in-memory-agendamentos-repository';
-import { AgendamentoTerminalStateError } from './errors/agendamento-terminal-state-error';
-import { UpdateAgendamentoStatusUseCase } from './update-agendamento-status';
+import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
+import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
+import { UpdateAgendamentoStatusUseCase } from '@/modules/agenda/application/use-cases/update-agendamento-status';
 
 describe('UpdateAgendamentoStatusUseCase', () => {
   let agendamentosRepository: InMemoryAgendamentosRepository;

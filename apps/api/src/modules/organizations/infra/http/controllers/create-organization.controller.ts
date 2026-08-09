@@ -1,9 +1,9 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
-import { CreateOrganizationUseCase } from '../../../application/use-cases/create-organization';
-import type { CreateOrganizationInput } from '../../../dto/create-organization.schema';
-import { createOrganizationSchema } from '../../../dto/create-organization.schema';
-import { OrganizationPresenter } from '../presenters/organization-presenter';
+import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation.pipe';
+import { CreateOrganizationUseCase } from '@/modules/organizations/application/use-cases/create-organization';
+import type { CreateOrganizationInput } from '@/modules/organizations/dto/create-organization.schema';
+import { createOrganizationSchema } from '@/modules/organizations/dto/create-organization.schema';
+import { OrganizationPresenter } from '@/modules/organizations/infra/http/presenters/organization-presenter';
 
 /**
  * Rota de teste manual da fundação de tenant/auth — sem @RequirePermission

@@ -1,13 +1,13 @@
-import { makePatient } from '../../../../test/factories/make-patient';
-import { makeAgendamento } from '../../../../test/factories/make-agendamento';
-import { InMemoryAgendamentosRepository } from '../../../../test/repositories/in-memory-agendamentos-repository';
-import { InMemoryPatientsRepository } from '../../../../test/repositories/in-memory-patients-repository';
-import { InMemoryProfissionaisRepository } from '../../../../test/repositories/in-memory-profissionais-repository';
-import { AgendamentoNotFoundError } from './errors/agendamento-not-found-error';
-import { AgendamentoTerminalStateError } from './errors/agendamento-terminal-state-error';
-import { InvalidAgendamentoIntervalError } from './errors/invalid-agendamento-interval-error';
-import { NotOwnAgendamentoError } from './errors/not-own-agendamento-error';
-import { UpdateAgendamentoUseCase } from './update-agendamento';
+import { makePatient } from '@/test/factories/make-patient';
+import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
+import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
+import { InMemoryProfissionaisRepository } from '@/test/repositories/in-memory-profissionais-repository';
+import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
+import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
+import { InvalidAgendamentoIntervalError } from '@/modules/agenda/application/use-cases/errors/invalid-agendamento-interval-error';
+import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
+import { UpdateAgendamentoUseCase } from '@/modules/agenda/application/use-cases/update-agendamento';
 
 describe('UpdateAgendamentoUseCase', () => {
   let agendamentosRepository: InMemoryAgendamentosRepository;

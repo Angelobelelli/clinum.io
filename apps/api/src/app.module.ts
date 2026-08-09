@@ -5,18 +5,18 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { DatabaseModule } from './infra/database/database.module';
-import { PermissionGuard } from './infra/auth/permission.guard';
-import { PrismaExceptionFilter } from './infra/error-handling/prisma-exception.filter';
-import { TenantMatchGuard } from './infra/tenant/tenant-match.guard';
-import { TenantMiddleware } from './infra/tenant/tenant.middleware';
-import { OrganizationsModule } from './modules/organizations/organizations.module';
-import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
-import { MembersModule } from './modules/members/members.module';
-import { PatientsModule } from './modules/patients/patients.module';
-import { AgendaModule } from './modules/agenda/agenda.module';
+import { AppController } from '@/app.controller';
+import { AppService } from '@/app.service';
+import { DatabaseModule } from '@/infra/database/database.module';
+import { PermissionGuard } from '@/infra/auth/permission.guard';
+import { PrismaExceptionFilter } from '@/infra/error-handling/prisma-exception.filter';
+import { TenantMatchGuard } from '@/infra/tenant/tenant-match.guard';
+import { TenantMiddleware } from '@/infra/tenant/tenant.middleware';
+import { OrganizationsModule } from '@/modules/organizations/organizations.module';
+import { PlatformAdminModule } from '@/modules/platform-admin/platform-admin.module';
+import { MembersModule } from '@/modules/members/members.module';
+import { PatientsModule } from '@/modules/patients/patients.module';
+import { AgendaModule } from '@/modules/agenda/agenda.module';
 
 @Module({
   imports: [

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { validateOrThrowApiError } from './validate-or-throw-api-error';
+import { validateOrThrowApiError } from '@/infra/auth/dto/validate-or-throw-api-error';
 
 /**
  * Papéis de ORGANIZAÇÃO (dentro de uma única empresa cliente) — ver

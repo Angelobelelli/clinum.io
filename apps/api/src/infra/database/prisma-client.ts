@@ -1,6 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../../../generated/prisma/client';
-import { env } from '../../core/env/env';
+import { PrismaClient } from '@generated/prisma/client';
+import { env } from '@/core/env/env';
 
 /**
  * Client Prisma "cru" (sem a extension de isolamento de tenant), usado por

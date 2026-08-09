@@ -1,4 +1,4 @@
-import { PaginatedResult } from './paginated-result';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
 
 /**
  * Envelope HTTP padrão de qualquer endpoint "findAll" paginado:

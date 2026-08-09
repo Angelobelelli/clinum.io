@@ -1,11 +1,11 @@
 import { Body, Controller, Param, Patch } from '@nestjs/common';
-import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
-import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
-import { UpdatePatientUseCase } from '../../../application/use-cases/update-patient';
-import { updatePatientSchema } from '../../../dto/update-patient.schema';
-import type { UpdatePatientInput } from '../../../dto/update-patient.schema';
-import { patientErrorToHttpException } from '../patient-error-mapper';
-import { PatientPresenter } from '../presenters/patient-presenter';
+import { RequirePermission } from '@/infra/auth/permission.decorator';
+import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation.pipe';
+import { UpdatePatientUseCase } from '@/modules/patients/application/use-cases/update-patient';
+import { updatePatientSchema } from '@/modules/patients/dto/update-patient.schema';
+import type { UpdatePatientInput } from '@/modules/patients/dto/update-patient.schema';
+import { patientErrorToHttpException } from '@/modules/patients/infra/http/patient-error-mapper';
+import { PatientPresenter } from '@/modules/patients/infra/http/presenters/patient-presenter';
 
 @Controller('patients')
 export class UpdatePatientController {

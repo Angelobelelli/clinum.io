@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import type { statement } from './access-control';
+import type { statement } from '@/infra/auth/access-control';
 
 export const PERMISSION_KEY = 'permission';
 

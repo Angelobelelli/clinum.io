@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { toNodeHandler } from 'better-auth/node';
 import type { Express } from 'express';
-import { auth } from './auth';
+import { auth } from '@/infra/auth/auth';
 
 export const AUTH_BASE_PATH = '/api/auth';
 

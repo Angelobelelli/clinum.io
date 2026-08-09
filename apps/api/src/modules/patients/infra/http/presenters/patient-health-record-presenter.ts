@@ -1,4 +1,4 @@
-import { PatientHealthRecord } from '../../../enterprise/entities/patient-health-record';
+import { PatientHealthRecord } from '@/modules/patients/enterprise/entities/patient-health-record';
 
 export class PatientHealthRecordPresenter {
   static toHTTP(record: PatientHealthRecord) {

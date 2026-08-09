@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../infra/database/prisma.service';
-import { OrganizationsRepository } from '../../application/repositories/organizations-repository';
-import { Organization } from '../../enterprise/entities/organization';
-import { PrismaOrganizationMapper } from './mappers/prisma-organization-mapper';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { OrganizationsRepository } from '@/modules/organizations/application/repositories/organizations-repository';
+import { Organization } from '@/modules/organizations/enterprise/entities/organization';
+import { PrismaOrganizationMapper } from '@/modules/organizations/infra/database/mappers/prisma-organization-mapper';
 
 /**
  * Usa PrismaService (client cru), não TenantScopedPrismaService — Organization

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { TenantScopedPrismaService } from '../../../../infra/database/tenant-scoped-prisma.service';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { TenantScopedPrismaService } from '@/infra/database/tenant-scoped-prisma.service';
 import {
   FindManyPatientsParams,
   PatientsRepository,
-} from '../../application/repositories/patients-repository';
-import { Patient } from '../../enterprise/entities/patient';
-import { PrismaPatientMapper } from './mappers/prisma-patient-mapper';
+} from '@/modules/patients/application/repositories/patients-repository';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
+import { PrismaPatientMapper } from '@/modules/patients/infra/database/mappers/prisma-patient-mapper';
 
 @Injectable()
 export class PrismaPatientsRepository implements PatientsRepository {

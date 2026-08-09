@@ -1,5 +1,5 @@
-import { InMemoryTenantOrganizationsRepository } from '../../../../test/repositories/in-memory-tenant-organizations-repository';
-import { CreateOrganizationUseCase } from './create-organization';
+import { InMemoryTenantOrganizationsRepository } from '@/test/repositories/in-memory-tenant-organizations-repository';
+import { CreateOrganizationUseCase } from '@/modules/organizations/application/use-cases/create-organization';
 
 describe('CreateOrganizationUseCase', () => {
   let organizationsRepository: InMemoryTenantOrganizationsRepository;

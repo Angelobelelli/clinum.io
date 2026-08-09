@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { Prisma } from '../../../generated/prisma/client';
-import { prismaClient } from '../database/prisma-client';
+import type { Prisma } from '@generated/prisma/client';
+import { prismaClient } from '@/infra/database/prisma-client';
 
 export interface RecordAdminAuditLogInput {
   adminUserId: string;

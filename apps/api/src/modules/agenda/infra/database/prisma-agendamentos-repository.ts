@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '../../../../../generated/prisma/client';
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { TenantScopedPrismaService } from '../../../../infra/database/tenant-scoped-prisma.service';
+import type { Prisma } from '@generated/prisma/client';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { TenantScopedPrismaService } from '@/infra/database/tenant-scoped-prisma.service';
 import {
   Agendamento,
   STATUS_QUE_BLOQUEIAM_HORARIO,
-} from '../../enterprise/entities/agendamento';
+} from '@/modules/agenda/enterprise/entities/agendamento';
 import {
   AgendamentosRepository,
   FindManyAgendamentosFilter,
-} from '../../application/repositories/agendamentos-repository';
-import { PrismaAgendamentoMapper } from './mappers/prisma-agendamento-mapper';
+} from '@/modules/agenda/application/repositories/agendamentos-repository';
+import { PrismaAgendamentoMapper } from '@/modules/agenda/infra/database/mappers/prisma-agendamento-mapper';
 
 @Injectable()
 export class PrismaAgendamentosRepository implements AgendamentosRepository {

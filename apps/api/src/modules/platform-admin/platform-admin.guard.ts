@@ -6,9 +6,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from '../../infra/auth/auth';
-import { isPlatformSuperAdmin } from '../../infra/auth/platform-role';
-import type { PlatformAdminRequest } from './platform-admin-request';
+import { auth } from '@/infra/auth/auth';
+import { isPlatformSuperAdmin } from '@/infra/auth/platform-role';
+import type { PlatformAdminRequest } from '@/modules/platform-admin/platform-admin-request';
 
 /**
  * Gate de acesso à administração da PLATAFORMA (dono do SaaS, cross-tenant)

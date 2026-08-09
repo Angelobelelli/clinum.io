@@ -1,5 +1,5 @@
-import { AgendamentoAuditLogsRepository } from '../../modules/agenda/application/repositories/agendamento-audit-logs-repository';
-import { AgendamentoAuditLog } from '../../modules/agenda/enterprise/entities/agendamento-audit-log';
+import { AgendamentoAuditLogsRepository } from '@/modules/agenda/application/repositories/agendamento-audit-logs-repository';
+import { AgendamentoAuditLog } from '@/modules/agenda/enterprise/entities/agendamento-audit-log';
 
 export class InMemoryAgendamentoAuditLogsRepository implements AgendamentoAuditLogsRepository {
   public items: AgendamentoAuditLog[] = [];

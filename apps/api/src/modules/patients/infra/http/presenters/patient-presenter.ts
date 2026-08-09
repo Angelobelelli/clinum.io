@@ -1,4 +1,4 @@
-import { Patient } from '../../../enterprise/entities/patient';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
 
 /**
  * Achata a entidade de volta pro mesmo formato de linha que o Prisma

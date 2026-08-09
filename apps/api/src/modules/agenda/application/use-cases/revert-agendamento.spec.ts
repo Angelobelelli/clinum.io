@@ -1,9 +1,9 @@
-import { makeAgendamento } from '../../../../test/factories/make-agendamento';
-import { InMemoryAgendamentoAuditLogsRepository } from '../../../../test/repositories/in-memory-agendamento-audit-logs-repository';
-import { InMemoryAgendamentosRepository } from '../../../../test/repositories/in-memory-agendamentos-repository';
-import { AgendamentoConflictError } from './errors/agendamento-conflict-error';
-import { AgendamentoNotTerminalError } from './errors/agendamento-not-terminal-error';
-import { RevertAgendamentoUseCase } from './revert-agendamento';
+import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { InMemoryAgendamentoAuditLogsRepository } from '@/test/repositories/in-memory-agendamento-audit-logs-repository';
+import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
+import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
+import { AgendamentoNotTerminalError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-terminal-error';
+import { RevertAgendamentoUseCase } from '@/modules/agenda/application/use-cases/revert-agendamento';
 
 describe('RevertAgendamentoUseCase', () => {
   let agendamentosRepository: InMemoryAgendamentosRepository;

@@ -1,10 +1,10 @@
-import { makePatient } from '../../../../test/factories/make-patient';
-import { makePatientHealthRecord } from '../../../../test/factories/make-patient-health-record';
-import { InMemoryPatientHealthRecordsRepository } from '../../../../test/repositories/in-memory-patient-health-records-repository';
-import { InMemoryPatientsRepository } from '../../../../test/repositories/in-memory-patients-repository';
-import { HealthRecordNotFoundError } from './errors/health-record-not-found-error';
-import { PatientNotFoundError } from './errors/patient-not-found-error';
-import { UpdateHealthRecordUseCase } from './update-health-record';
+import { makePatient } from '@/test/factories/make-patient';
+import { makePatientHealthRecord } from '@/test/factories/make-patient-health-record';
+import { InMemoryPatientHealthRecordsRepository } from '@/test/repositories/in-memory-patient-health-records-repository';
+import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
+import { HealthRecordNotFoundError } from '@/modules/patients/application/use-cases/errors/health-record-not-found-error';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
+import { UpdateHealthRecordUseCase } from '@/modules/patients/application/use-cases/update-health-record';
 
 describe('UpdateHealthRecordUseCase', () => {
   let patientsRepository: InMemoryPatientsRepository;

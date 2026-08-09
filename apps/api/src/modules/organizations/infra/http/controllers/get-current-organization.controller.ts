@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
-import { getCurrentTenantId } from '../../../../../infra/tenant/tenant-context';
-import { GetCurrentOrganizationUseCase } from '../../../application/use-cases/get-current-organization';
-import { organizationErrorToHttpException } from '../organization-error-mapper';
-import { OrganizationPresenter } from '../presenters/organization-presenter';
+import { getCurrentTenantId } from '@/infra/tenant/tenant-context';
+import { GetCurrentOrganizationUseCase } from '@/modules/organizations/application/use-cases/get-current-organization';
+import { organizationErrorToHttpException } from '@/modules/organizations/infra/http/organization-error-mapper';
+import { OrganizationPresenter } from '@/modules/organizations/infra/http/presenters/organization-presenter';
 
 /**
  * Prova que TenantMiddleware + AsyncLocalStorage resolveram corretamente o

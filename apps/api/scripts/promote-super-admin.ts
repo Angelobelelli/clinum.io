@@ -1,4 +1,4 @@
-import { prismaClient } from '../src/infra/database/prisma-client';
+import { prismaClient } from '@/infra/database/prisma-client';
 
 /**
  * Promove um usuário já existente (criado normalmente via

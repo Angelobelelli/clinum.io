@@ -1,8 +1,8 @@
 import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import { PrismaService } from '../database/prisma.service';
-import { env } from '../../core/env/env';
-import { runWithTenantContext } from './tenant-context';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { env } from '@/core/env/env';
+import { runWithTenantContext } from '@/infra/tenant/tenant-context';
 
 /**
  * Resolve o tenant (Organization) da requisição a partir do header Host, e
@@ -10,9 +10,11 @@ import { runWithTenantContext } from './tenant-context';
  * AsyncLocalStorage de tenant-context.ts.
  *
  * Resolução, em ordem:
- *   1. Em desenvolvimento (NODE_ENV=development), o header "X-Tenant-Slug",
- *      se presente, tem prioridade — não há subdomínio real em localhost, e
- *      isso permite testar via curl/Postman/Insomnia sem configurar DNS local.
+ *   1. Fora de produção (NODE_ENV=development ou test), o header
+ *      "X-Tenant-Slug", se presente, tem prioridade — não há subdomínio real
+ *      em localhost, e isso permite testar via curl/Postman/Insomnia sem
+ *      configurar DNS local, além de ser o mecanismo que os specs e2e (ver
+ *      test/*.e2e-spec.ts) usam pra simular tenants.
  *   2. customDomain exatamente igual ao host (ex: www.clinicaabc.com.br).
  *   3. Subdomínio do host usado como slug (ex: "clinicabemestar" em
  *      clinicabemestar.dominio-do-saas.com.br).
@@ -68,7 +70,7 @@ export class TenantMiddleware implements NestMiddleware {
   }
 
   private getDevSlugOverride(req: Request): string | null {
-    if (env.NODE_ENV !== 'development') {
+    if (env.NODE_ENV === 'production') {
       return null;
     }
     const header = req.headers['x-tenant-slug'];

@@ -1,4 +1,4 @@
-import { UniqueEntityID } from './unique-entity-id';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 
 /**
  * Classe base para entidades de domínio (enterprise/entities/*) — nunca

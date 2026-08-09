@@ -7,9 +7,9 @@ import {
 import { Reflector } from '@nestjs/core';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { Request } from 'express';
-import { auth } from '../auth/auth';
-import { getCurrentTenantId } from './tenant-context';
-import { SKIP_TENANT_MATCH_KEY } from './skip-tenant-match.decorator';
+import { auth } from '@/infra/auth/auth';
+import { getCurrentTenantId } from '@/infra/tenant/tenant-context';
+import { SKIP_TENANT_MATCH_KEY } from '@/infra/tenant/skip-tenant-match.decorator';
 
 /**
  * Revalida, para toda requisição autenticada, que a organização ativa da

@@ -1,6 +1,6 @@
-import { makeOrganization } from '../../../../test/factories/make-organization';
-import { InMemoryOrganizationsRepository } from '../../../../test/repositories/in-memory-organizations-repository';
-import { ListOrganizationsUseCase } from './list-organizations';
+import { makeOrganization } from '@/test/factories/make-organization';
+import { InMemoryOrganizationsRepository } from '@/test/repositories/in-memory-organizations-repository';
+import { ListOrganizationsUseCase } from '@/modules/platform-admin/application/use-cases/list-organizations';
 
 describe('ListOrganizationsUseCase', () => {
   let organizationsRepository: InMemoryOrganizationsRepository;

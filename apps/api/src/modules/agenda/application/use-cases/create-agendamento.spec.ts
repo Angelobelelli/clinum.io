@@ -1,13 +1,13 @@
-import { makePatient } from '../../../../test/factories/make-patient';
-import { makeAgendamento } from '../../../../test/factories/make-agendamento';
-import { InMemoryAgendamentosRepository } from '../../../../test/repositories/in-memory-agendamentos-repository';
-import { InMemoryPatientsRepository } from '../../../../test/repositories/in-memory-patients-repository';
-import { InMemoryProfissionaisRepository } from '../../../../test/repositories/in-memory-profissionais-repository';
-import { CreateAgendamentoUseCase } from './create-agendamento';
-import { AgendamentoConflictError } from './errors/agendamento-conflict-error';
-import { NotOwnAgendamentoError } from './errors/not-own-agendamento-error';
-import { ProfissionalNotFoundError } from './errors/profissional-not-found-error';
-import { PatientNotFoundError } from '../../../patients/application/use-cases/errors/patient-not-found-error';
+import { makePatient } from '@/test/factories/make-patient';
+import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
+import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
+import { InMemoryProfissionaisRepository } from '@/test/repositories/in-memory-profissionais-repository';
+import { CreateAgendamentoUseCase } from '@/modules/agenda/application/use-cases/create-agendamento';
+import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
+import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
+import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
 
 describe('CreateAgendamentoUseCase', () => {
   let agendamentosRepository: InMemoryAgendamentosRepository;

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { OrganizationsRepository } from './application/repositories/organizations-repository';
-import { CreateOrganizationUseCase } from './application/use-cases/create-organization';
-import { GetCurrentOrganizationUseCase } from './application/use-cases/get-current-organization';
-import { PrismaOrganizationsRepository } from './infra/database/prisma-organizations-repository';
-import { CreateOrganizationController } from './infra/http/controllers/create-organization.controller';
-import { GetCurrentOrganizationController } from './infra/http/controllers/get-current-organization.controller';
+import { OrganizationsRepository } from '@/modules/organizations/application/repositories/organizations-repository';
+import { CreateOrganizationUseCase } from '@/modules/organizations/application/use-cases/create-organization';
+import { GetCurrentOrganizationUseCase } from '@/modules/organizations/application/use-cases/get-current-organization';
+import { PrismaOrganizationsRepository } from '@/modules/organizations/infra/database/prisma-organizations-repository';
+import { CreateOrganizationController } from '@/modules/organizations/infra/http/controllers/create-organization.controller';
+import { GetCurrentOrganizationController } from '@/modules/organizations/infra/http/controllers/get-current-organization.controller';
 
 @Module({
   controllers: [CreateOrganizationController, GetCurrentOrganizationController],

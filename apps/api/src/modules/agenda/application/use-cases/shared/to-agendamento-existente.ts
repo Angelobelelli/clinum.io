@@ -1,5 +1,5 @@
-import { AgendamentoExistente } from '../../../enterprise/check-agendamento-overlap';
-import { Agendamento } from '../../../enterprise/entities/agendamento';
+import { AgendamentoExistente } from '@/modules/agenda/enterprise/check-agendamento-overlap';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
 
 /**
  * Adapta entidades Agendamento pro formato plano que

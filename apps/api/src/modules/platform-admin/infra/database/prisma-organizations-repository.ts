@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { PrismaService } from '../../../../infra/database/prisma.service';
-import { Organization } from '../../enterprise/entities/organization';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { Organization } from '@/modules/platform-admin/enterprise/entities/organization';
 import {
   FindManyOrganizationsParams,
   OrganizationsRepository,
-} from '../../application/repositories/organizations-repository';
-import { PrismaOrganizationMapper } from './mappers/prisma-organization-mapper';
+} from '@/modules/platform-admin/application/repositories/organizations-repository';
+import { PrismaOrganizationMapper } from '@/modules/platform-admin/infra/database/mappers/prisma-organization-mapper';
 
 /**
  * Usa PrismaService cru (conexão superuser) de propósito — cross-tenant,

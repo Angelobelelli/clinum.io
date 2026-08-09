@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
-import { PatientHealthRecord } from '../../enterprise/entities/patient-health-record';
-import { PatientHealthRecordsRepository } from '../repositories/patient-health-records-repository';
-import { PatientsRepository } from '../repositories/patients-repository';
-import { HealthRecordNotFoundError } from './errors/health-record-not-found-error';
-import { PatientNotFoundError } from './errors/patient-not-found-error';
+import { Either, left, right } from '@/core/either';
+import { PatientHealthRecord } from '@/modules/patients/enterprise/entities/patient-health-record';
+import { PatientHealthRecordsRepository } from '@/modules/patients/application/repositories/patient-health-records-repository';
+import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
+import { HealthRecordNotFoundError } from '@/modules/patients/application/use-cases/errors/health-record-not-found-error';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
 
 export interface UpdateHealthRecordUseCaseRequest {
   patientId: string;

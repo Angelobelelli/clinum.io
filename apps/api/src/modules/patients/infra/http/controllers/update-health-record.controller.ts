@@ -1,11 +1,11 @@
 import { Body, Controller, Param, Patch } from '@nestjs/common';
-import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
-import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
-import { UpdateHealthRecordUseCase } from '../../../application/use-cases/update-health-record';
-import { upsertHealthRecordSchema } from '../../../dto/upsert-health-record.schema';
-import type { UpsertHealthRecordInput } from '../../../dto/upsert-health-record.schema';
-import { patientErrorToHttpException } from '../patient-error-mapper';
-import { PatientHealthRecordPresenter } from '../presenters/patient-health-record-presenter';
+import { RequirePermission } from '@/infra/auth/permission.decorator';
+import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation.pipe';
+import { UpdateHealthRecordUseCase } from '@/modules/patients/application/use-cases/update-health-record';
+import { upsertHealthRecordSchema } from '@/modules/patients/dto/upsert-health-record.schema';
+import type { UpsertHealthRecordInput } from '@/modules/patients/dto/upsert-health-record.schema';
+import { patientErrorToHttpException } from '@/modules/patients/infra/http/patient-error-mapper';
+import { PatientHealthRecordPresenter } from '@/modules/patients/infra/http/presenters/patient-health-record-presenter';
 
 @Controller('patients')
 export class UpdateHealthRecordController {

@@ -1,4 +1,4 @@
-import { Agendamento } from '../../../enterprise/entities/agendamento';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
 
 /**
  * Achata a entidade de volta pro mesmo formato de linha que o Prisma

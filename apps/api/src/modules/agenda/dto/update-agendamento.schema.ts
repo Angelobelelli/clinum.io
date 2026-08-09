@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { agendamentoBaseSchema } from './create-agendamento.schema';
+import { agendamentoBaseSchema } from '@/modules/agenda/dto/create-agendamento.schema';
 
 export const updateAgendamentoSchema = agendamentoBaseSchema
   .partial()

@@ -1,5 +1,5 @@
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { Agendamento } from '../../enterprise/entities/agendamento';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
 
 export interface FindManyAgendamentosFilter {
   profissionalId?: string;

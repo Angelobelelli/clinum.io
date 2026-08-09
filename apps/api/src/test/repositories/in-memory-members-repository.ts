@@ -1,9 +1,9 @@
-import { PaginatedResult } from '../../core/pagination/paginated-result';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
 import {
   FindManyMembersParams,
   MembersRepository,
-} from '../../modules/members/application/repositories/members-repository';
-import { Member } from '../../modules/members/enterprise/entities/member';
+} from '@/modules/members/application/repositories/members-repository';
+import { Member } from '@/modules/members/enterprise/entities/member';
 
 export class InMemoryMembersRepository implements MembersRepository {
   public items: Member[] = [];

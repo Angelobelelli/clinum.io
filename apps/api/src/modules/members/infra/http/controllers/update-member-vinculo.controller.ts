@@ -6,12 +6,12 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
-import { UpdateMemberVinculoUseCase } from '../../../application/use-cases/update-member-vinculo';
-import { updateMemberVinculoSchema } from '../../../dto/update-member-vinculo.schema';
-import type { UpdateMemberVinculoInput } from '../../../dto/update-member-vinculo.schema';
-import { MemberOrgAdminGuard } from '../../../member-org-admin.guard';
-import { MemberPresenter } from '../presenters/member-presenter';
+import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation.pipe';
+import { UpdateMemberVinculoUseCase } from '@/modules/members/application/use-cases/update-member-vinculo';
+import { updateMemberVinculoSchema } from '@/modules/members/dto/update-member-vinculo.schema';
+import type { UpdateMemberVinculoInput } from '@/modules/members/dto/update-member-vinculo.schema';
+import { MemberOrgAdminGuard } from '@/modules/members/member-org-admin.guard';
+import { MemberPresenter } from '@/modules/members/infra/http/presenters/member-presenter';
 
 /**
  * Rota tenant-scoped normal (passa por TenantMiddleware/TenantMatchGuard

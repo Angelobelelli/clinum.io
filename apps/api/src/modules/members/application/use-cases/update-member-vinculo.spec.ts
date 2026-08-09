@@ -1,7 +1,7 @@
-import { makeMember } from '../../../../test/factories/make-member';
-import { InMemoryMembersRepository } from '../../../../test/repositories/in-memory-members-repository';
-import { MemberNotFoundError } from './errors/member-not-found-error';
-import { UpdateMemberVinculoUseCase } from './update-member-vinculo';
+import { makeMember } from '@/test/factories/make-member';
+import { InMemoryMembersRepository } from '@/test/repositories/in-memory-members-repository';
+import { MemberNotFoundError } from '@/modules/members/application/use-cases/errors/member-not-found-error';
+import { UpdateMemberVinculoUseCase } from '@/modules/members/application/use-cases/update-member-vinculo';
 
 describe('UpdateMemberVinculoUseCase', () => {
   let membersRepository: InMemoryMembersRepository;

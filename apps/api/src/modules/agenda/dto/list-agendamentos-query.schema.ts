@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { paginationQuerySchema } from '../../../core/pagination/pagination-query.schema';
+import { paginationQuerySchema } from '@/core/pagination/pagination-query.schema';
 
 export const listAgendamentosQuerySchema = paginationQuerySchema.extend({
   data: z.string().optional(),

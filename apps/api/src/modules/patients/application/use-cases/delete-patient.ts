@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
-import { PatientsRepository } from '../repositories/patients-repository';
-import { PatientNotFoundError } from './errors/patient-not-found-error';
+import { Either, left, right } from '@/core/either';
+import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
 
 export interface DeletePatientUseCaseRequest {
   patientId: string;

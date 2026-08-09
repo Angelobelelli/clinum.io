@@ -1,5 +1,5 @@
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { Patient } from '../../enterprise/entities/patient';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
 
 export interface FindManyPatientsParams {
   page: number;

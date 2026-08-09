@@ -1,5 +1,5 @@
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { Organization } from '../../enterprise/entities/organization';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Organization } from '@/modules/platform-admin/enterprise/entities/organization';
 
 export interface FindManyOrganizationsParams {
   page: number;

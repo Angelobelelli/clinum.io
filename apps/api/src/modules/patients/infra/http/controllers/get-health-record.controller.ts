@@ -1,8 +1,8 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
-import { GetHealthRecordUseCase } from '../../../application/use-cases/get-health-record';
-import { patientErrorToHttpException } from '../patient-error-mapper';
-import { PatientHealthRecordPresenter } from '../presenters/patient-health-record-presenter';
+import { RequirePermission } from '@/infra/auth/permission.decorator';
+import { GetHealthRecordUseCase } from '@/modules/patients/application/use-cases/get-health-record';
+import { patientErrorToHttpException } from '@/modules/patients/infra/http/patient-error-mapper';
+import { PatientHealthRecordPresenter } from '@/modules/patients/infra/http/presenters/patient-health-record-presenter';
 
 @Controller('patients')
 export class GetHealthRecordController {

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { Agendamento } from '../../enterprise/entities/agendamento';
-import { CallerMember } from '../policies/agenda-ownership-policy';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
+import { CallerMember } from '@/modules/agenda/application/policies/agenda-ownership-policy';
 import {
   AgendamentosRepository,
   FindManyAgendamentosFilter,
-} from '../repositories/agendamentos-repository';
+} from '@/modules/agenda/application/repositories/agendamentos-repository';
 
 export interface ListAgendamentosUseCaseRequest {
   caller: CallerMember;

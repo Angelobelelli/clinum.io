@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
-import { PatientNotFoundError } from '../../../patients/application/use-cases/errors/patient-not-found-error';
-import { PatientsRepository } from '../../../patients/application/repositories/patients-repository';
-import { Agendamento } from '../../enterprise/entities/agendamento';
-import { encontrarConflitoDeHorario } from '../../enterprise/check-agendamento-overlap';
+import { Either, left, right } from '@/core/either';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
+import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
+import { encontrarConflitoDeHorario } from '@/modules/agenda/enterprise/check-agendamento-overlap';
 import {
   CallerMember,
   isOwnResource,
-} from '../policies/agenda-ownership-policy';
-import { AgendamentosRepository } from '../repositories/agendamentos-repository';
-import { ProfissionaisRepository } from '../repositories/profissionais-repository';
-import { AgendamentoConflictError } from './errors/agendamento-conflict-error';
-import { NotOwnAgendamentoError } from './errors/not-own-agendamento-error';
-import { ProfissionalNotFoundError } from './errors/profissional-not-found-error';
-import { toAgendamentoExistente } from './shared/to-agendamento-existente';
+} from '@/modules/agenda/application/policies/agenda-ownership-policy';
+import { AgendamentosRepository } from '@/modules/agenda/application/repositories/agendamentos-repository';
+import { ProfissionaisRepository } from '@/modules/agenda/application/repositories/profissionais-repository';
+import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
+import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
+import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
+import { toAgendamentoExistente } from '@/modules/agenda/application/use-cases/shared/to-agendamento-existente';
 
 // organizationId placeholder: ver mesmo padrão em
 // patients/application/use-cases/create-patient.ts (sempre sobrescrito pela

@@ -1,4 +1,4 @@
-import { Organization } from '../../../enterprise/entities/organization';
+import { Organization } from '@/modules/platform-admin/enterprise/entities/organization';
 
 export class OrganizationPresenter {
   static toHTTP(organization: Organization) {

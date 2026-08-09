@@ -4,6 +4,11 @@
     "declaration": true,
     "incremental": true,
     "outDir": "./dist",
-    "baseUrl": "./"
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@generated/*": ["./generated/*"]
+    },
+    "types": ["vitest/globals", "node"]
   }
 }

@@ -1,9 +1,9 @@
 import type {
   Prisma,
   Agendamento as PrismaAgendamento,
-} from '../../../../../../generated/prisma/client';
-import { UniqueEntityID } from '../../../../../core/entities/unique-entity-id';
-import { Agendamento } from '../../../enterprise/entities/agendamento';
+} from '@generated/prisma/client';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
 
 export class PrismaAgendamentoMapper {
   static toDomain(raw: PrismaAgendamento): Agendamento {

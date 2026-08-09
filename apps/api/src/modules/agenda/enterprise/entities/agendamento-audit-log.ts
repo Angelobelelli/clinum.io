@@ -1,6 +1,6 @@
-import { Entity } from '../../../../core/entities/entity';
-import { UniqueEntityID } from '../../../../core/entities/unique-entity-id';
-import type { AgendamentoStatusValue } from './agendamento';
+import { Entity } from '@/core/entities/entity';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
+import type { AgendamentoStatusValue } from '@/modules/agenda/enterprise/entities/agendamento';
 
 export interface AgendamentoAuditLogProps {
   organizationId: string;

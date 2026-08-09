@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
-import { Agendamento } from '../../enterprise/entities/agendamento';
-import { CallerMember } from '../policies/agenda-ownership-policy';
-import { AgendamentosRepository } from '../repositories/agendamentos-repository';
-import { AgendamentoNotFoundError } from './errors/agendamento-not-found-error';
-import { AgendamentoTerminalStateError } from './errors/agendamento-terminal-state-error';
-import { NotOwnAgendamentoError } from './errors/not-own-agendamento-error';
-import { findOwnedAgendamento } from './shared/find-owned-agendamento';
+import { Either, left, right } from '@/core/either';
+import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
+import { CallerMember } from '@/modules/agenda/application/policies/agenda-ownership-policy';
+import { AgendamentosRepository } from '@/modules/agenda/application/repositories/agendamentos-repository';
+import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
+import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
+import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
+import { findOwnedAgendamento } from '@/modules/agenda/application/use-cases/shared/find-owned-agendamento';
 
 export interface CancelAgendamentoUseCaseRequest {
   agendamentoId: string;

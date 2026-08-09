@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { PrismaService } from '../../../../infra/database/prisma.service';
-import { getCurrentTenantId } from '../../../../infra/tenant/tenant-context';
-import { Member } from '../../enterprise/entities/member';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { getCurrentTenantId } from '@/infra/tenant/tenant-context';
+import { Member } from '@/modules/members/enterprise/entities/member';
 import {
   FindManyMembersParams,
   MembersRepository,
-} from '../../application/repositories/members-repository';
-import { PrismaMemberMapper } from './mappers/prisma-member-mapper';
+} from '@/modules/members/application/repositories/members-repository';
+import { PrismaMemberMapper } from '@/modules/members/infra/database/mappers/prisma-member-mapper';
 
 /**
  * Member não é TENANT_SCOPED_MODELS (ver prisma-tenant.extension.ts) —

@@ -1,8 +1,8 @@
-import { UniqueEntityID } from '../../core/entities/unique-entity-id';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import {
   Agendamento,
   AgendamentoProps,
-} from '../../modules/agenda/enterprise/entities/agendamento';
+} from '@/modules/agenda/enterprise/entities/agendamento';
 
 let sequence = 0;
 

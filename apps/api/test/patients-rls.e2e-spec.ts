@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/infra/database/prisma.service';
-import { tenantScopedPrismaClient } from '../src/infra/database/tenant-scoped-prisma-client';
-import { runWithTenantContext } from '../src/infra/tenant/tenant-context';
+import { AppModule } from '@/app.module';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { tenantScopedPrismaClient } from '@/infra/database/tenant-scoped-prisma-client';
+import { runWithTenantContext } from '@/infra/tenant/tenant-context';
 
 /**
  * Prova que a Row-Level Security da tabela "patient" funciona por si só,

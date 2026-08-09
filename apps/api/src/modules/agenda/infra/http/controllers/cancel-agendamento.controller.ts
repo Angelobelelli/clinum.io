@@ -1,9 +1,9 @@
 import { Controller, Param, Patch, Req } from '@nestjs/common';
-import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
-import type { PermissionRequest } from '../../../../../infra/auth/permission-request';
-import { CancelAgendamentoUseCase } from '../../../application/use-cases/cancel-agendamento';
-import { agendamentoErrorToHttpException } from '../agendamento-error-mapper';
-import { AgendamentoPresenter } from '../presenters/agendamento-presenter';
+import { RequirePermission } from '@/infra/auth/permission.decorator';
+import type { PermissionRequest } from '@/infra/auth/permission-request';
+import { CancelAgendamentoUseCase } from '@/modules/agenda/application/use-cases/cancel-agendamento';
+import { agendamentoErrorToHttpException } from '@/modules/agenda/infra/http/agendamento-error-mapper';
+import { AgendamentoPresenter } from '@/modules/agenda/infra/http/presenters/agendamento-presenter';
 
 @Controller('agendamentos')
 export class CancelAgendamentoController {

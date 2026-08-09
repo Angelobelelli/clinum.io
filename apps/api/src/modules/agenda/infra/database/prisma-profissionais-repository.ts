@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../infra/database/prisma.service';
-import { getCurrentTenantId } from '../../../../infra/tenant/tenant-context';
-import { ProfissionaisRepository } from '../../application/repositories/profissionais-repository';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { getCurrentTenantId } from '@/infra/tenant/tenant-context';
+import { ProfissionaisRepository } from '@/modules/agenda/application/repositories/profissionais-repository';
 
 /**
  * Member (profissionalId) não é tenant-scoped (ver members module —

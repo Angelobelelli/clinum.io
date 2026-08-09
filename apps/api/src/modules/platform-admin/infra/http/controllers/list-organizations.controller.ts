@@ -5,16 +5,16 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { paginationQuerySchema } from '../../../../../core/pagination/pagination-query.schema';
-import type { PaginationQuery } from '../../../../../core/pagination/pagination-query.schema';
-import { toPaginatedHTTP } from '../../../../../core/pagination/to-paginated-http';
-import { SkipTenantMatch } from '../../../../../infra/tenant/skip-tenant-match.decorator';
-import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
-import { ListOrganizationsUseCase } from '../../../application/use-cases/list-organizations';
-import { PlatformAdminAction } from '../../../audit-log/platform-admin-action.decorator';
-import { PlatformAdminAuditInterceptor } from '../../../audit-log/platform-admin-audit.interceptor';
-import { PlatformAdminGuard } from '../../../platform-admin.guard';
-import { OrganizationPresenter } from '../presenters/organization-presenter';
+import { paginationQuerySchema } from '@/core/pagination/pagination-query.schema';
+import type { PaginationQuery } from '@/core/pagination/pagination-query.schema';
+import { toPaginatedHTTP } from '@/core/pagination/to-paginated-http';
+import { SkipTenantMatch } from '@/infra/tenant/skip-tenant-match.decorator';
+import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation.pipe';
+import { ListOrganizationsUseCase } from '@/modules/platform-admin/application/use-cases/list-organizations';
+import { PlatformAdminAction } from '@/modules/platform-admin/audit-log/platform-admin-action.decorator';
+import { PlatformAdminAuditInterceptor } from '@/modules/platform-admin/audit-log/platform-admin-audit.interceptor';
+import { PlatformAdminGuard } from '@/modules/platform-admin/platform-admin.guard';
+import { OrganizationPresenter } from '@/modules/platform-admin/infra/http/presenters/organization-presenter';
 
 /**
  * Painel de administração da PLATAFORMA (dono do SaaS) — cross-tenant por

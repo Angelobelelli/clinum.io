@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Patient } from '../../enterprise/entities/patient';
-import { PatientHealthRecord } from '../../enterprise/entities/patient-health-record';
-import { PatientHealthRecordsRepository } from '../repositories/patient-health-records-repository';
-import { PatientsRepository } from '../repositories/patients-repository';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
+import { PatientHealthRecord } from '@/modules/patients/enterprise/entities/patient-health-record';
+import { PatientHealthRecordsRepository } from '@/modules/patients/application/repositories/patient-health-records-repository';
+import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
 
 // organizationId placeholder: sempre sobrescrito em runtime pela Prisma
 // Client Extension de tenant (ver prisma-tenant.extension.ts), que injeta o

@@ -1,4 +1,4 @@
-import { Organization } from '../../enterprise/entities/organization';
+import { Organization } from '@/modules/organizations/enterprise/entities/organization';
 
 /**
  * Contrato abstrato (não interface do TS) para poder ser usado como token

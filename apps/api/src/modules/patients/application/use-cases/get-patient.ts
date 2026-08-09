@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
-import { Patient } from '../../enterprise/entities/patient';
-import { PatientsRepository } from '../repositories/patients-repository';
-import { PatientNotFoundError } from './errors/patient-not-found-error';
+import { Either, left, right } from '@/core/either';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
+import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
+import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
 
 export interface GetPatientUseCaseRequest {
   patientId: string;

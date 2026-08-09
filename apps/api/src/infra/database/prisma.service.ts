@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { prismaClient } from './prisma-client';
+import { prismaClient } from '@/infra/database/prisma-client';
 
 /**
  * Wrapper Nest do client Prisma "cru" (sem isolamento de tenant), para uso em

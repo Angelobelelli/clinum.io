@@ -1,4 +1,4 @@
-import { Member } from '../../../enterprise/entities/member';
+import { Member } from '@/modules/members/enterprise/entities/member';
 
 export class MemberPresenter {
   static toHTTP(member: Member) {

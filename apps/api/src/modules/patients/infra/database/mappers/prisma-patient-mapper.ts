@@ -1,9 +1,9 @@
 import type {
   Prisma,
   Patient as PrismaPatient,
-} from '../../../../../../generated/prisma/client';
-import { UniqueEntityID } from '../../../../../core/entities/unique-entity-id';
-import { Patient } from '../../../enterprise/entities/patient';
+} from '@generated/prisma/client';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
 
 export class PrismaPatientMapper {
   static toDomain(raw: PrismaPatient): Patient {

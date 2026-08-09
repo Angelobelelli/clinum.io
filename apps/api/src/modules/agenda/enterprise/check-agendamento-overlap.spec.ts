@@ -1,4 +1,4 @@
-import { encontrarConflitoDeHorario } from './check-agendamento-overlap';
+import { encontrarConflitoDeHorario } from '@/modules/agenda/enterprise/check-agendamento-overlap';
 
 describe('encontrarConflitoDeHorario', () => {
   const existente = {

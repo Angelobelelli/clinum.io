@@ -1,5 +1,5 @@
-import { OrganizationsRepository } from '../../modules/organizations/application/repositories/organizations-repository';
-import { Organization } from '../../modules/organizations/enterprise/entities/organization';
+import { OrganizationsRepository } from '@/modules/organizations/application/repositories/organizations-repository';
+import { Organization } from '@/modules/organizations/enterprise/entities/organization';
 
 /**
  * Nome distinto de in-memory-organizations-repository.ts (que já existia e

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
+import { Either, left, right } from '@/core/either';
 import {
   Member,
   MemberStatusValue,
   MemberTipoVinculoValue,
-} from '../../enterprise/entities/member';
-import { MembersRepository } from '../repositories/members-repository';
-import { MemberNotFoundError } from './errors/member-not-found-error';
+} from '@/modules/members/enterprise/entities/member';
+import { MembersRepository } from '@/modules/members/application/repositories/members-repository';
+import { MemberNotFoundError } from '@/modules/members/application/use-cases/errors/member-not-found-error';
 
 export interface UpdateMemberVinculoUseCaseRequest {
   memberId: string;

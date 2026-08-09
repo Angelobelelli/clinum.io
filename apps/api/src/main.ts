@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { json, urlencoded } from 'express';
-import { AppModule } from './app.module';
-import { attachDevForwardedFor } from './infra/auth/attach-dev-forwarded-for';
-import { mountBetterAuth } from './infra/auth/mount-auth';
-import { env } from './core/env/env';
+import { AppModule } from '@/app.module';
+import { attachDevForwardedFor } from '@/infra/auth/attach-dev-forwarded-for';
+import { mountBetterAuth } from '@/infra/auth/mount-auth';
+import { env } from '@/core/env/env';
 
 async function bootstrap() {
   // bodyParser desabilitado globalmente: o handler do better-auth (montado

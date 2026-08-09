@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { Patient } from '../../enterprise/entities/patient';
-import { PatientsRepository } from '../repositories/patients-repository';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
+import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
 
 export interface ListPatientsUseCaseRequest {
   page: number;

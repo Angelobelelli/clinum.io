@@ -1,7 +1,7 @@
-import { InMemoryTenantOrganizationsRepository } from '../../../../test/repositories/in-memory-tenant-organizations-repository';
-import { Organization } from '../../enterprise/entities/organization';
-import { OrganizationNotFoundError } from './errors/organization-not-found-error';
-import { GetCurrentOrganizationUseCase } from './get-current-organization';
+import { InMemoryTenantOrganizationsRepository } from '@/test/repositories/in-memory-tenant-organizations-repository';
+import { Organization } from '@/modules/organizations/enterprise/entities/organization';
+import { OrganizationNotFoundError } from '@/modules/organizations/application/use-cases/errors/organization-not-found-error';
+import { GetCurrentOrganizationUseCase } from '@/modules/organizations/application/use-cases/get-current-organization';
 
 describe('GetCurrentOrganizationUseCase', () => {
   let organizationsRepository: InMemoryTenantOrganizationsRepository;

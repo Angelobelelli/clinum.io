@@ -1,8 +1,8 @@
-import { UniqueEntityID } from '../../core/entities/unique-entity-id';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import {
   Patient,
   PatientProps,
-} from '../../modules/patients/enterprise/entities/patient';
+} from '@/modules/patients/enterprise/entities/patient';
 
 let sequence = 0;
 

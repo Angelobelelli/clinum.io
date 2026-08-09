@@ -1,9 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { admin as adminPlugin, organization } from 'better-auth/plugins';
-import { recordAdminAuditLog } from '../audit/admin-audit-log';
-import { prismaClient } from '../database/prisma-client';
-import { env } from '../../core/env/env';
+import { recordAdminAuditLog } from '@/infra/audit/admin-audit-log';
+import { prismaClient } from '@/infra/database/prisma-client';
+import { env } from '@/core/env/env';
 import {
   ac,
   admin as orgAdmin,
@@ -11,16 +11,16 @@ import {
   owner,
   reception,
   staff,
-} from './access-control';
-import { validateOrThrowApiError } from './dto/validate-or-throw-api-error';
-import { validateMemberRole } from './dto/member-role.schema';
-import { organizationVerticalPlanoSchema } from './dto/organization-vertical-plano.schema';
+} from '@/infra/auth/access-control';
+import { validateOrThrowApiError } from '@/infra/auth/dto/validate-or-throw-api-error';
+import { validateMemberRole } from '@/infra/auth/dto/member-role.schema';
+import { organizationVerticalPlanoSchema } from '@/infra/auth/dto/organization-vertical-plano.schema';
 import {
   platformAc,
   platformSuperAdmin,
   platformUser,
-} from './platform-access-control';
-import { PLATFORM_SUPER_ADMIN_ROLE } from './platform-role';
+} from '@/infra/auth/platform-access-control';
+import { PLATFORM_SUPER_ADMIN_ROLE } from '@/infra/auth/platform-role';
 
 /**
  * Instância única do better-auth, usada tanto pela aplicação (montada em
@@ -48,9 +48,14 @@ export const auth = betterAuth({
   rateLimit: {
     // O better-auth só habilita rate limit por padrão quando
     // NODE_ENV === 'production' (enabled: options.rateLimit?.enabled ??
-    // isProduction). Precisa desse `enabled: true` explícito para valer
-    // também em dev/test.
-    enabled: true,
+    // isProduction). Precisa desse override explícito para valer também em
+    // dev (testar manualmente via curl/Postman). Exceto em 'test': os specs
+    // e2e criam vários usuários via /sign-up/email em sequência rápida (ver
+    // test/*.e2e-spec.ts) e trombam com o customRule de 5 req/60s abaixo —
+    // rate limit continua ativo em desenvolvimento e produção, só não em
+    // execução automatizada de teste (ver vitest.config.e2e.ts, que seta
+    // NODE_ENV=test).
+    enabled: env.NODE_ENV !== 'test',
     // Regra global (aplica a qualquer rota de /api/auth/* que não tenha
     // uma regra específica abaixo em customRules). 100 req/60s é o
     // suficiente para uso normal (checagem de sessão, refresh, etc) sem

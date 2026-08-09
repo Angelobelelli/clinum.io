@@ -1,9 +1,9 @@
-import { PaginatedResult } from '../../core/pagination/paginated-result';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
 import {
   FindManyPatientsParams,
   PatientsRepository,
-} from '../../modules/patients/application/repositories/patients-repository';
-import { Patient } from '../../modules/patients/enterprise/entities/patient';
+} from '@/modules/patients/application/repositories/patients-repository';
+import { Patient } from '@/modules/patients/enterprise/entities/patient';
 
 export class InMemoryPatientsRepository implements PatientsRepository {
   public items: Patient[] = [];

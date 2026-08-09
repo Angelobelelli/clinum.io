@@ -1,6 +1,6 @@
-import { makePatient } from '../../../../test/factories/make-patient';
-import { InMemoryPatientsRepository } from '../../../../test/repositories/in-memory-patients-repository';
-import { ListPatientsUseCase } from './list-patients';
+import { makePatient } from '@/test/factories/make-patient';
+import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
+import { ListPatientsUseCase } from '@/modules/patients/application/use-cases/list-patients';
 
 describe('ListPatientsUseCase', () => {
   let patientsRepository: InMemoryPatientsRepository;

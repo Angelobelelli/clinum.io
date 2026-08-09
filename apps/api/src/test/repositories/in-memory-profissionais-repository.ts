@@ -1,4 +1,4 @@
-import { ProfissionaisRepository } from '../../modules/agenda/application/repositories/profissionais-repository';
+import { ProfissionaisRepository } from '@/modules/agenda/application/repositories/profissionais-repository';
 
 export class InMemoryProfissionaisRepository implements ProfissionaisRepository {
   public existingIds = new Set<string>();

@@ -1,7 +1,7 @@
 import { Controller, Delete, Param } from '@nestjs/common';
-import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
-import { DeletePatientUseCase } from '../../../application/use-cases/delete-patient';
-import { patientErrorToHttpException } from '../patient-error-mapper';
+import { RequirePermission } from '@/infra/auth/permission.decorator';
+import { DeletePatientUseCase } from '@/modules/patients/application/use-cases/delete-patient';
+import { patientErrorToHttpException } from '@/modules/patients/infra/http/patient-error-mapper';
 
 @Controller('patients')
 export class DeletePatientController {

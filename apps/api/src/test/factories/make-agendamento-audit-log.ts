@@ -1,8 +1,8 @@
-import { UniqueEntityID } from '../../core/entities/unique-entity-id';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import {
   AgendamentoAuditLog,
   AgendamentoAuditLogProps,
-} from '../../modules/agenda/enterprise/entities/agendamento-audit-log';
+} from '@/modules/agenda/enterprise/entities/agendamento-audit-log';
 
 export function makeAgendamentoAuditLog(
   override: Partial<AgendamentoAuditLogProps> = {},

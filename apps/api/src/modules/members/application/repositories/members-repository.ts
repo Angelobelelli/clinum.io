@@ -1,5 +1,5 @@
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { Member } from '../../enterprise/entities/member';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Member } from '@/modules/members/enterprise/entities/member';
 
 export interface FindManyMembersParams {
   page: number;

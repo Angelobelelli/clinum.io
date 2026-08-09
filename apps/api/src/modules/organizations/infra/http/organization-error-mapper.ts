@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { OrganizationNotFoundError } from '../../application/use-cases/errors/organization-not-found-error';
+import { OrganizationNotFoundError } from '@/modules/organizations/application/use-cases/errors/organization-not-found-error';
 
 export function organizationErrorToHttpException(
   error: OrganizationNotFoundError,

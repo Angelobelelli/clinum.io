@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MemberStatus, TipoVinculo } from '../../../../generated/prisma/enums';
+import { MemberStatus, TipoVinculo } from '@generated/prisma/enums';
 
 /**
  * tipoVinculo/status são enums NATIVOS do Postgres (ver prisma/schema.prisma)

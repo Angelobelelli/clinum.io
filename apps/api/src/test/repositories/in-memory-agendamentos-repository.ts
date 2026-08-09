@@ -1,12 +1,12 @@
-import { PaginatedResult } from '../../core/pagination/paginated-result';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
 import {
   AgendamentosRepository,
   FindManyAgendamentosFilter,
-} from '../../modules/agenda/application/repositories/agendamentos-repository';
+} from '@/modules/agenda/application/repositories/agendamentos-repository';
 import {
   Agendamento,
   STATUS_QUE_BLOQUEIAM_HORARIO,
-} from '../../modules/agenda/enterprise/entities/agendamento';
+} from '@/modules/agenda/enterprise/entities/agendamento';
 
 export class InMemoryAgendamentosRepository implements AgendamentosRepository {
   public items: Agendamento[] = [];

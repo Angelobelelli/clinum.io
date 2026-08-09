@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { PrismaService } from './prisma.service';
-import { TenantScopedPrismaService } from './tenant-scoped-prisma.service';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { TenantScopedPrismaService } from '@/infra/database/tenant-scoped-prisma.service';
 
 /**
  * Global para que PrismaService (tabelas de auth/tenant) e

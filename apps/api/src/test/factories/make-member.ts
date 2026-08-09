@@ -1,8 +1,8 @@
-import { UniqueEntityID } from '../../core/entities/unique-entity-id';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import {
   Member,
   MemberProps,
-} from '../../modules/members/enterprise/entities/member';
+} from '@/modules/members/enterprise/entities/member';
 
 export function makeMember(
   override: Partial<MemberProps> = {},

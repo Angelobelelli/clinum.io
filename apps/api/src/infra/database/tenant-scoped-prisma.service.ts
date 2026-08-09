@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { tenantScopedPrismaClient } from './tenant-scoped-prisma-client';
+import { tenantScopedPrismaClient } from '@/infra/database/tenant-scoped-prisma-client';
 
 /**
  * Wrapper Nest do client Prisma tenant-scoped (isolamento de tenant +

@@ -1,6 +1,6 @@
-import { InMemoryPatientHealthRecordsRepository } from '../../../../test/repositories/in-memory-patient-health-records-repository';
-import { InMemoryPatientsRepository } from '../../../../test/repositories/in-memory-patients-repository';
-import { CreatePatientUseCase } from './create-patient';
+import { InMemoryPatientHealthRecordsRepository } from '@/test/repositories/in-memory-patient-health-records-repository';
+import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
+import { CreatePatientUseCase } from '@/modules/patients/application/use-cases/create-patient';
 
 describe('CreatePatientUseCase', () => {
   let patientsRepository: InMemoryPatientsRepository;

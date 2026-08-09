@@ -1,12 +1,12 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
-import { RequirePermission } from '../../../../../infra/auth/permission.decorator';
-import type { PermissionRequest } from '../../../../../infra/auth/permission-request';
-import { ZodValidationPipe } from '../../../../../infra/http/pipes/zod-validation.pipe';
-import { CreateAgendamentoUseCase } from '../../../application/use-cases/create-agendamento';
-import { createAgendamentoSchema } from '../../../dto/create-agendamento.schema';
-import type { CreateAgendamentoInput } from '../../../dto/create-agendamento.schema';
-import { agendamentoErrorToHttpException } from '../agendamento-error-mapper';
-import { AgendamentoPresenter } from '../presenters/agendamento-presenter';
+import { RequirePermission } from '@/infra/auth/permission.decorator';
+import type { PermissionRequest } from '@/infra/auth/permission-request';
+import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation.pipe';
+import { CreateAgendamentoUseCase } from '@/modules/agenda/application/use-cases/create-agendamento';
+import { createAgendamentoSchema } from '@/modules/agenda/dto/create-agendamento.schema';
+import type { CreateAgendamentoInput } from '@/modules/agenda/dto/create-agendamento.schema';
+import { agendamentoErrorToHttpException } from '@/modules/agenda/infra/http/agendamento-error-mapper';
+import { AgendamentoPresenter } from '@/modules/agenda/infra/http/presenters/agendamento-presenter';
 
 @Controller('agendamentos')
 export class CreateAgendamentoController {

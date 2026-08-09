@@ -1,8 +1,8 @@
-import { UniqueEntityID } from '../../core/entities/unique-entity-id';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import {
   Organization,
   OrganizationProps,
-} from '../../modules/platform-admin/enterprise/entities/organization';
+} from '@/modules/platform-admin/enterprise/entities/organization';
 
 let sequence = 0;
 

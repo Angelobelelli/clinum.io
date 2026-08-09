@@ -1,6 +1,6 @@
-import { makeMember } from '../../../../test/factories/make-member';
-import { InMemoryMembersRepository } from '../../../../test/repositories/in-memory-members-repository';
-import { ListMembersUseCase } from './list-members';
+import { makeMember } from '@/test/factories/make-member';
+import { InMemoryMembersRepository } from '@/test/repositories/in-memory-members-repository';
+import { ListMembersUseCase } from '@/modules/members/application/use-cases/list-members';
 
 describe('ListMembersUseCase', () => {
   let membersRepository: InMemoryMembersRepository;

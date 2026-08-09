@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PaginatedResult } from '../../../../core/pagination/paginated-result';
-import { Organization } from '../../enterprise/entities/organization';
-import { OrganizationsRepository } from '../repositories/organizations-repository';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Organization } from '@/modules/platform-admin/enterprise/entities/organization';
+import { OrganizationsRepository } from '@/modules/platform-admin/application/repositories/organizations-repository';
 
 export interface ListOrganizationsUseCaseRequest {
   page: number;
