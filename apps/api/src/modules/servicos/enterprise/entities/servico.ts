@@ -1,5 +1,5 @@
-import { Entity } from '../../../../core/entities/entity';
-import { UniqueEntityID } from '../../../../core/entities/unique-entity-id';
+import { Entity } from '@/core/entities/entity';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 
 export interface ServicoProps {
   organizationId: string;
@@ -20,36 +20,16 @@ export class Servico extends Entity<ServicoProps> {
     return this.props.nome;
   }
 
-  set nome(value: string) {
-    this.props.nome = value;
-    this.touch();
-  }
-
   get duracaoMinutos(): number {
     return this.props.duracaoMinutos;
-  }
-
-  set duracaoMinutos(value: number) {
-    this.props.duracaoMinutos = value;
-    this.touch();
   }
 
   get preco(): number {
     return this.props.preco;
   }
 
-  set preco(value: number) {
-    this.props.preco = value;
-    this.touch();
-  }
-
   get ativo(): boolean {
     return this.props.ativo;
-  }
-
-  set ativo(value: boolean) {
-    this.props.ativo = value;
-    this.touch();
   }
 
   get createdAt(): Date {
@@ -79,5 +59,33 @@ export class Servico extends Entity<ServicoProps> {
       },
       id,
     );
+  }
+
+  atualizarDados(dados: {
+    nome?: string;
+    duracaoMinutos?: number;
+    preco?: number;
+  }): void {
+    if (dados.duracaoMinutos !== undefined && dados.duracaoMinutos < 1) {
+      throw new Error('Duração deve ser no mínimo 1 minuto');
+    }
+    if (dados.preco !== undefined && dados.preco < 0) {
+      throw new Error('Preço não pode ser negativo');
+    }
+    if (dados.nome !== undefined) this.props.nome = dados.nome;
+    if (dados.duracaoMinutos !== undefined)
+      this.props.duracaoMinutos = dados.duracaoMinutos;
+    if (dados.preco !== undefined) this.props.preco = dados.preco;
+    this.touch();
+  }
+
+  ativar(): void {
+    this.props.ativo = true;
+    this.touch();
+  }
+
+  desativar(): void {
+    this.props.ativo = false;
+    this.touch();
   }
 }

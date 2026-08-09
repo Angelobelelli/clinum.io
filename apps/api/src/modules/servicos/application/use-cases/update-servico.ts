@@ -1,43 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { Either, left, right } from '../../../../core/either';
-import { Servico } from '../../enterprise/entities/servico';
-import { ServicosRepository } from '../repositories/servicos-repository';
-import { ServicoNotFoundError } from './errors/servico-not-found-error';
+import { Either, left, right } from '@/core/either';
+import { ServicosRepository } from '@/modules/servicos/application/repositories/servicos-repository';
+import { ServicoNotFoundError } from '@/modules/servicos/application/use-cases/errors/servico-not-found-error';
 
 export interface UpdateServicoUseCaseRequest {
   servicoId: string;
   nome?: string;
   duracaoMinutos?: number;
   preco?: number;
-  ativo?: boolean;
 }
 
-export type UpdateServicoUseCaseResponse = Either<
-  ServicoNotFoundError,
-  { servico: Servico }
->;
+export type UpdateServicoUseCaseResponse = Either<ServicoNotFoundError, null>;
 
 @Injectable()
 export class UpdateServicoUseCase {
   constructor(private readonly servicosRepository: ServicosRepository) {}
 
-  async execute(
-    request: UpdateServicoUseCaseRequest,
-  ): Promise<UpdateServicoUseCaseResponse> {
-    const servico = await this.servicosRepository.findById(request.servicoId);
+  async execute({
+    servicoId,
+    nome,
+    duracaoMinutos,
+    preco,
+  }: UpdateServicoUseCaseRequest): Promise<UpdateServicoUseCaseResponse> {
+    const servico = await this.servicosRepository.findById(servicoId);
 
     if (!servico) {
       return left(new ServicoNotFoundError());
     }
 
-    if (request.nome !== undefined) servico.nome = request.nome;
-    if (request.duracaoMinutos !== undefined)
-      servico.duracaoMinutos = request.duracaoMinutos;
-    if (request.preco !== undefined) servico.preco = request.preco;
-    if (request.ativo !== undefined) servico.ativo = request.ativo;
+    servico.atualizarDados({
+      nome: nome,
+      duracaoMinutos: duracaoMinutos,
+      preco: preco,
+    });
 
-    const updatedServico = await this.servicosRepository.save(servico);
+    await this.servicosRepository.save(servico);
 
-    return right({ servico: updatedServico });
+    return right(null);
   }
 }

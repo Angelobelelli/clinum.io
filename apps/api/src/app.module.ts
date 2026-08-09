@@ -17,6 +17,7 @@ import { PlatformAdminModule } from '@/modules/platform-admin/platform-admin.mod
 import { MembersModule } from '@/modules/members/members.module';
 import { PatientsModule } from '@/modules/patients/patients.module';
 import { AgendaModule } from '@/modules/agenda/agenda.module';
+import { ServicosModule } from '@/modules/servicos/servicos.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AgendaModule } from '@/modules/agenda/agenda.module';
     MembersModule,
     PatientsModule,
     AgendaModule,
+    ServicosModule,
   ],
   controllers: [AppController],
   providers: [

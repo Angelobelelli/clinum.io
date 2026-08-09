@@ -36,6 +36,10 @@ export const statement = {
     'update_status',
     'revert',
   ],
+  // Catálogo de serviços (modules/servicos/) — nome, duração, preço.
+  // "activate"/"deactivate" em vez de um "update" genérico de status porque
+  // são as únicas transições possíveis (ver Servico.ativar()/desativar()).
+  servico: ['create', 'read', 'update', 'activate', 'deactivate'],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -67,6 +71,7 @@ export const owner = ac.newRole({
     'update_status',
     'revert',
   ],
+  servico: ['create', 'read', 'update', 'activate', 'deactivate'],
 });
 
 export const admin = ac.newRole({
@@ -91,6 +96,7 @@ export const admin = ac.newRole({
     'update_status',
     'revert',
   ],
+  servico: ['create', 'read', 'update', 'activate', 'deactivate'],
 });
 
 export const member = ac.newRole({
@@ -103,6 +109,7 @@ export const member = ac.newRole({
   // access-control.ts topo — papel genérico, pouco usado na prática).
   patient: [],
   agendamento: [],
+  servico: [],
 });
 
 /**
@@ -130,6 +137,9 @@ export const staff = ac.newRole({
     'delete',
   ],
   agendamento: ['create', 'read', 'update', 'cancel', 'update_status'],
+  // Só leitura: staff usa o catálogo pra saber duração/preço do
+  // atendimento, mas quem administra o catálogo é owner/admin.
+  servico: ['read'],
 });
 
 /**
@@ -155,6 +165,8 @@ export const reception = ac.newRole({
   ac: ['read'],
   patient: ['create', 'read', 'update'],
   agendamento: ['create', 'read', 'update', 'cancel'],
+  // Mesmo racional de staff: usa o catálogo pra agendar, não administra.
+  servico: ['read'],
 });
 
 /**

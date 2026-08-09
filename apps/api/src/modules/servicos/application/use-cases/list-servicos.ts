@@ -1,13 +1,12 @@
-import { PaginatedResult } from 'src/core/pagination/paginated-result';
-import { Servico } from '../../enterprise/entities/servico';
+import { PaginatedResult } from '@/core/pagination/paginated-result';
+import { Servico } from '@/modules/servicos/enterprise/entities/servico';
 import { Injectable } from '@nestjs/common';
 import {
   FindManyServicosFilter,
   ServicosRepository,
-} from '../repositories/servicos-repository';
+} from '@/modules/servicos/application/repositories/servicos-repository';
 
 export interface ListServicosUseCaseRequest {
-  ativo?: boolean;
   page: number;
   perPage: number;
 }
@@ -16,17 +15,14 @@ export type ListServicosUseCaseResponse = PaginatedResult<Servico>;
 @Injectable()
 export class ListServicosUseCase {
   constructor(private readonly servicosRepository: ServicosRepository) {}
-  async execute(
-    request: ListServicosUseCaseRequest,
-  ): Promise<ListServicosUseCaseResponse> {
+  execute({
+    page,
+    perPage,
+  }: ListServicosUseCaseRequest): Promise<ListServicosUseCaseResponse> {
     const filter: FindManyServicosFilter = {
-      page: request.page,
-      perPage: request.perPage,
+      page: page,
+      perPage: perPage,
     };
-
-    if (request.ativo !== undefined) {
-      filter.ativo = request.ativo;
-    }
 
     return this.servicosRepository.findMany(filter);
   }

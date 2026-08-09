@@ -1,9 +1,9 @@
 import type {
   Prisma,
   Servico as PrismaServico,
-} from '../../../../../../generated/prisma/client';
-import { UniqueEntityID } from '../../../../../core/entities/unique-entity-id';
-import { Servico } from '../../../enterprise/entities/servico';
+} from '@generated/prisma/client';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
+import { Servico } from '@/modules/servicos/enterprise/entities/servico';
 
 export class PrismaServicoMapper {
   static toDomain(raw: PrismaServico): Servico {
@@ -27,9 +27,16 @@ export class PrismaServicoMapper {
    * esse valor com o organizationId real do contexto (ver
    * prisma-tenant.extension.ts), então o que a entidade carrega neste ponto
    * é irrelevante para o resultado final.
+   *
+   * id incluído explicitamente (mesmo racional do mapper de Organization):
+   * sem isso, o Postgres gera seu próprio cuid() via @default no schema, e a
+   * entidade que o use-case devolve pro controller fica com um id que nunca
+   * corresponde à linha de verdade no banco — toda chamada seguinte
+   * (GET/UPDATE/ativar/desativar) com esse id dá 404.
    */
   static toPrismaCreate(servico: Servico): Prisma.ServicoUncheckedCreateInput {
     return {
+      id: servico.id.toValue(),
       organizationId: servico.organizationId,
       nome: servico.nome,
       duracaoMinutos: servico.duracaoMinutos,
