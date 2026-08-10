@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Either, left, right } from '@/core/either';
 import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
 import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
+import { ServicoNotFoundError } from '@/modules/servicos/application/use-cases/errors/servico-not-found-error';
+import { ServicosRepository } from '@/modules/servicos/application/repositories/servicos-repository';
 import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
+import { calcularDataHoraFim } from '@/modules/agenda/enterprise/calcular-data-hora-fim';
 import { encontrarConflitoDeHorario } from '@/modules/agenda/enterprise/check-agendamento-overlap';
 import {
   CallerMember,
@@ -16,6 +19,7 @@ import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-
 import { InvalidAgendamentoIntervalError } from '@/modules/agenda/application/use-cases/errors/invalid-agendamento-interval-error';
 import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
+import { ServicoInativoError } from '@/modules/agenda/application/use-cases/errors/servico-inativo-error';
 import { findOwnedAgendamento } from '@/modules/agenda/application/use-cases/shared/find-owned-agendamento';
 import { toAgendamentoExistente } from '@/modules/agenda/application/use-cases/shared/to-agendamento-existente';
 
@@ -25,7 +29,12 @@ export interface UpdateAgendamentoUseCaseRequest {
   patientId?: string;
   profissionalId?: string;
   dataHoraInicio?: Date;
+  // servicoId e dataHoraFim são mutuamente exclusivos quando os dois vêm
+  // preenchidos — garantido pelo updateAgendamentoSchema, não revalidado
+  // aqui. Se nenhum dos dois vier, dataHoraFim atual do agendamento não
+  // muda (mesmo comportamento de antes desta mudança).
   dataHoraFim?: Date;
+  servicoId?: string;
   observacao?: string;
 }
 
@@ -35,6 +44,8 @@ export type UpdateAgendamentoUseCaseResponse = Either<
   | AgendamentoTerminalStateError
   | ProfissionalNotFoundError
   | PatientNotFoundError
+  | ServicoNotFoundError
+  | ServicoInativoError
   | InvalidAgendamentoIntervalError
   | AgendamentoConflictError,
   { agendamento: Agendamento }
@@ -46,6 +57,7 @@ export class UpdateAgendamentoUseCase {
     private readonly agendamentosRepository: AgendamentosRepository,
     private readonly profissionaisRepository: ProfissionaisRepository,
     private readonly patientsRepository: PatientsRepository,
+    private readonly servicosRepository: ServicosRepository,
   ) {}
 
   async execute(
@@ -95,10 +107,27 @@ export class UpdateAgendamentoUseCase {
     }
 
     const novaDataInicio = request.dataHoraInicio ?? agendamento.dataHoraInicio;
-    const novaDataFim = request.dataHoraFim ?? agendamento.dataHoraFim;
+
+    let novaDataFim: Date;
+    if (request.servicoId !== undefined) {
+      const servico = await this.servicosRepository.findById(request.servicoId);
+      if (!servico) {
+        return left(new ServicoNotFoundError());
+      }
+      if (!servico.ativo) {
+        return left(new ServicoInativoError());
+      }
+      novaDataFim = calcularDataHoraFim(novaDataInicio, servico.duracaoMinutos);
+    } else if (request.dataHoraFim !== undefined) {
+      novaDataFim = request.dataHoraFim;
+    } else {
+      novaDataFim = agendamento.dataHoraFim;
+    }
+
     const mudouIntervaloOuProfissional =
       request.dataHoraInicio !== undefined ||
       request.dataHoraFim !== undefined ||
+      request.servicoId !== undefined ||
       request.profissionalId !== undefined;
 
     if (mudouIntervaloOuProfissional) {
@@ -129,8 +158,10 @@ export class UpdateAgendamentoUseCase {
       agendamento.profissionalId = request.profissionalId;
     if (request.dataHoraInicio !== undefined)
       agendamento.dataHoraInicio = request.dataHoraInicio;
-    if (request.dataHoraFim !== undefined)
-      agendamento.dataHoraFim = request.dataHoraFim;
+    if (request.servicoId !== undefined)
+      agendamento.servicoId = request.servicoId;
+    if (request.dataHoraFim !== undefined || request.servicoId !== undefined)
+      agendamento.dataHoraFim = novaDataFim;
     if (request.observacao !== undefined)
       agendamento.observacao = request.observacao;
 

@@ -18,9 +18,10 @@ import { ListAgendamentosController } from '@/modules/agenda/infra/http/controll
 import { RevertAgendamentoController } from '@/modules/agenda/infra/http/controllers/revert-agendamento.controller';
 import { UpdateAgendamentoStatusController } from '@/modules/agenda/infra/http/controllers/update-agendamento-status.controller';
 import { UpdateAgendamentoController } from '@/modules/agenda/infra/http/controllers/update-agendamento.controller';
+import { ServicosModule } from '@/modules/servicos/servicos.module';
 
 @Module({
-  imports: [PatientsModule],
+  imports: [PatientsModule, ServicosModule],
   controllers: [
     CreateAgendamentoController,
     ListAgendamentosController,

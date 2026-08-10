@@ -15,6 +15,7 @@ export function makeAgendamento(
   return Agendamento.create(
     {
       organizationId: 'org-test',
+      servicoId: null,
       patientId: `patient-${sequence}`,
       profissionalId: `profissional-${sequence}`,
       dataHoraInicio: new Date('2026-09-01T10:00:00.000Z'),

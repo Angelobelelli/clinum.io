@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Either, left, right } from '@/core/either';
 import { PatientNotFoundError } from '@/modules/patients/application/use-cases/errors/patient-not-found-error';
 import { PatientsRepository } from '@/modules/patients/application/repositories/patients-repository';
+import { ServicoNotFoundError } from '@/modules/servicos/application/use-cases/errors/servico-not-found-error';
+import { ServicosRepository } from '@/modules/servicos/application/repositories/servicos-repository';
 import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
+import { calcularDataHoraFim } from '@/modules/agenda/enterprise/calcular-data-hora-fim';
 import { encontrarConflitoDeHorario } from '@/modules/agenda/enterprise/check-agendamento-overlap';
 import {
   CallerMember,
@@ -13,6 +16,7 @@ import { ProfissionaisRepository } from '@/modules/agenda/application/repositori
 import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
 import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
+import { ServicoInativoError } from '@/modules/agenda/application/use-cases/errors/servico-inativo-error';
 import { toAgendamentoExistente } from '@/modules/agenda/application/use-cases/shared/to-agendamento-existente';
 
 // organizationId placeholder: ver mesmo padrão em
@@ -24,7 +28,11 @@ export interface CreateAgendamentoUseCaseRequest {
   patientId: string;
   profissionalId: string;
   dataHoraInicio: Date;
-  dataHoraFim: Date;
+  // Exatamente um dos dois chega preenchido — garantido pelo
+  // createAgendamentoSchema (ver dto/create-agendamento.schema.ts), não
+  // revalidado aqui.
+  dataHoraFim?: Date;
+  servicoId?: string;
   observacao?: string;
   caller: CallerMember;
 }
@@ -33,6 +41,8 @@ export type CreateAgendamentoUseCaseResponse = Either<
   | NotOwnAgendamentoError
   | ProfissionalNotFoundError
   | PatientNotFoundError
+  | ServicoNotFoundError
+  | ServicoInativoError
   | AgendamentoConflictError,
   { agendamento: Agendamento }
 >;
@@ -43,6 +53,7 @@ export class CreateAgendamentoUseCase {
     private readonly agendamentosRepository: AgendamentosRepository,
     private readonly profissionaisRepository: ProfissionaisRepository,
     private readonly patientsRepository: PatientsRepository,
+    private readonly servicosRepository: ServicosRepository,
   ) {}
 
   async execute(
@@ -65,6 +76,23 @@ export class CreateAgendamentoUseCase {
       return left(new PatientNotFoundError());
     }
 
+    let dataHoraFim: Date;
+    if (request.servicoId !== undefined) {
+      const servico = await this.servicosRepository.findById(request.servicoId);
+      if (!servico) {
+        return left(new ServicoNotFoundError());
+      }
+      if (!servico.ativo) {
+        return left(new ServicoInativoError());
+      }
+      dataHoraFim = calcularDataHoraFim(
+        request.dataHoraInicio,
+        servico.duracaoMinutos,
+      );
+    } else {
+      dataHoraFim = request.dataHoraFim!;
+    }
+
     const bloqueando =
       await this.agendamentosRepository.findManyBlockingForProfissional(
         request.profissionalId,
@@ -72,7 +100,7 @@ export class CreateAgendamentoUseCase {
     const conflito = encontrarConflitoDeHorario(
       {
         dataHoraInicio: request.dataHoraInicio,
-        dataHoraFim: request.dataHoraFim,
+        dataHoraFim,
       },
       toAgendamentoExistente(bloqueando),
     );
@@ -82,10 +110,11 @@ export class CreateAgendamentoUseCase {
 
     const agendamento = Agendamento.create({
       organizationId: ORGANIZATION_ID_PLACEHOLDER,
+      servicoId: request.servicoId,
       patientId: request.patientId,
       profissionalId: request.profissionalId,
       dataHoraInicio: request.dataHoraInicio,
-      dataHoraFim: request.dataHoraFim,
+      dataHoraFim,
       observacao: request.observacao,
     });
 

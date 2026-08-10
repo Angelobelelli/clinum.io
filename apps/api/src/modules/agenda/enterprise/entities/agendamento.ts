@@ -24,6 +24,7 @@ export const STATUS_QUE_BLOQUEIAM_HORARIO: AgendamentoStatusValue[] = [
 
 export interface AgendamentoProps {
   organizationId: string;
+  servicoId?: string | null;
   patientId: string;
   profissionalId: string;
   dataHoraInicio: Date;
@@ -37,6 +38,15 @@ export interface AgendamentoProps {
 export class Agendamento extends Entity<AgendamentoProps> {
   get organizationId(): string {
     return this.props.organizationId;
+  }
+
+  get servicoId(): string | null | undefined {
+    return this.props.servicoId;
+  }
+
+  set servicoId(value: string | null | undefined) {
+    this.props.servicoId = value;
+    this.touch();
   }
 
   get patientId(): string {

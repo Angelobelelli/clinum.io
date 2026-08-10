@@ -35,5 +35,6 @@ import { UpdateServicoController } from '@/modules/servicos/infra/http/controlle
     ActivateServicoUseCase,
     DeactivateServicoUseCase,
   ],
+  exports: [ServicosRepository],
 })
 export class ServicosModule {}

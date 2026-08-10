@@ -4,6 +4,13 @@ import { agendamentoBaseSchema } from '@/modules/agenda/dto/create-agendamento.s
 export const updateAgendamentoSchema = agendamentoBaseSchema
   .partial()
   .refine(
+    (data) => !(data.servicoId !== undefined && data.dataHoraFim !== undefined),
+    {
+      message: 'Não é possível informar servicoId e dataHoraFim ao mesmo tempo',
+      path: ['dataHoraFim'],
+    },
+  )
+  .refine(
     (data) =>
       !data.dataHoraInicio ||
       !data.dataHoraFim ||

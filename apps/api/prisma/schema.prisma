@@ -290,10 +290,11 @@ model Servico {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  agendamentos   Agendamento[]
   nome           String
   duracaoMinutos Int
   preco          Int
-  ativo          Boolean @default(true)
+  ativo          Boolean       @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -333,6 +334,9 @@ model Agendamento {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  servicoId String?
+  servico   Servico? @relation(fields: [servicoId], references: [id], onDelete: SetNull)
+
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
@@ -352,9 +356,10 @@ model Agendamento {
   updatedAt DateTime @updatedAt
 
   // Suporta a busca de conflitos de horário (mesmo profissional, mesmo
-  // tenant) feita em modules/agenda/domain/.
+  // tenant) feita em modules/agenda/enterprise/.
   @@index([organizationId])
   @@index([organizationId, profissionalId, dataHoraInicio])
+  @@index([servicoId])
   @@map("agendamento")
 }
 

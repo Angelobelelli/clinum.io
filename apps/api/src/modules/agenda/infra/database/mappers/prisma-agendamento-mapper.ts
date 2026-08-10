@@ -10,6 +10,7 @@ export class PrismaAgendamentoMapper {
     return Agendamento.create(
       {
         organizationId: raw.organizationId,
+        servicoId: raw.servicoId,
         patientId: raw.patientId,
         profissionalId: raw.profissionalId,
         dataHoraInicio: raw.dataHoraInicio,
@@ -31,6 +32,7 @@ export class PrismaAgendamentoMapper {
   ): Prisma.AgendamentoUncheckedCreateInput {
     return {
       organizationId: agendamento.organizationId,
+      servicoId: agendamento.servicoId,
       patientId: agendamento.patientId,
       profissionalId: agendamento.profissionalId,
       dataHoraInicio: agendamento.dataHoraInicio,
@@ -44,6 +46,7 @@ export class PrismaAgendamentoMapper {
     agendamento: Agendamento,
   ): Prisma.AgendamentoUncheckedUpdateInput {
     return {
+      servicoId: agendamento.servicoId,
       patientId: agendamento.patientId,
       profissionalId: agendamento.profissionalId,
       dataHoraInicio: agendamento.dataHoraInicio,

@@ -10,6 +10,7 @@ export class AgendamentoPresenter {
     return {
       id: agendamento.id.toValue(),
       organizationId: agendamento.organizationId,
+      servicoId: agendamento.servicoId,
       patientId: agendamento.patientId,
       profissionalId: agendamento.profissionalId,
       dataHoraInicio: agendamento.dataHoraInicio,
