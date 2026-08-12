@@ -11,11 +11,13 @@ import {
   CallerMember,
   isOwnResource,
 } from '@/modules/agenda/application/policies/agenda-ownership-policy';
+import { AgendaExternalCalendarSyncPort } from '@/modules/agenda/application/ports/agenda-external-calendar-sync';
 import { AgendamentosRepository } from '@/modules/agenda/application/repositories/agendamentos-repository';
 import { ProfissionaisRepository } from '@/modules/agenda/application/repositories/profissionais-repository';
 import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
 import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
 import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
+import { ExternalCalendarConflictError } from '@/modules/agenda/application/use-cases/errors/external-calendar-conflict-error';
 import { InvalidAgendamentoIntervalError } from '@/modules/agenda/application/use-cases/errors/invalid-agendamento-interval-error';
 import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
@@ -47,7 +49,8 @@ export type UpdateAgendamentoUseCaseResponse = Either<
   | ServicoNotFoundError
   | ServicoInativoError
   | InvalidAgendamentoIntervalError
-  | AgendamentoConflictError,
+  | AgendamentoConflictError
+  | ExternalCalendarConflictError,
   { agendamento: Agendamento }
 >;
 
@@ -58,6 +61,7 @@ export class UpdateAgendamentoUseCase {
     private readonly profissionaisRepository: ProfissionaisRepository,
     private readonly patientsRepository: PatientsRepository,
     private readonly servicosRepository: ServicosRepository,
+    private readonly agendaExternalCalendarSyncPort: AgendaExternalCalendarSyncPort,
   ) {}
 
   async execute(
@@ -150,7 +154,23 @@ export class UpdateAgendamentoUseCase {
       if (conflito) {
         return left(new AgendamentoConflictError());
       }
+
+      // Free/Busy do calendário externo (ver AgendaExternalCalendarSyncPort)
+      // — só checado quando o horário/profissional realmente muda, mesmo
+      // gate de mudouIntervaloOuProfissional acima. No-op (sempre false) se
+      // o novo profissional não tiver conexão ativa.
+      const conflitoExterno =
+        await this.agendaExternalCalendarSyncPort.checkFreeBusyConflict({
+          profissionalId: novoProfissionalId,
+          dataHoraInicio: novaDataInicio,
+          dataHoraFim: novaDataFim,
+        });
+      if (conflitoExterno) {
+        return left(new ExternalCalendarConflictError());
+      }
     }
+
+    const profissionalAnteriorId = agendamento.profissionalId;
 
     if (request.patientId !== undefined)
       agendamento.patientId = request.patientId;
@@ -167,6 +187,35 @@ export class UpdateAgendamentoUseCase {
 
     const updatedAgendamento =
       await this.agendamentosRepository.save(agendamento);
+
+    const [patientAtual, servicoAtual] = await Promise.all([
+      this.patientsRepository.findById(updatedAgendamento.patientId),
+      updatedAgendamento.servicoId
+        ? this.servicosRepository.findById(updatedAgendamento.servicoId)
+        : Promise.resolve(null),
+    ]);
+
+    // Assíncrono (fila, ver modules/google-calendar/) — no-op se nem o
+    // profissional novo nem o anterior tiverem conexão ativa.
+    await this.agendaExternalCalendarSyncPort.enqueueSync({
+      agendamentoId: updatedAgendamento.id.toValue(),
+      profissionalId: updatedAgendamento.profissionalId,
+      previousProfissionalId:
+        profissionalAnteriorId !== updatedAgendamento.profissionalId
+          ? profissionalAnteriorId
+          : undefined,
+      type: 'upsert',
+      snapshot: {
+        // patientAtual só pode ser null aqui num cenário artificial de teste
+        // (fake repository sem o paciente semeado) — em produção a FK de
+        // Agendamento.patientId garante que o paciente sempre existe.
+        patientNome: patientAtual?.nome ?? '',
+        servicoNome: servicoAtual?.nome,
+        dataHoraInicio: updatedAgendamento.dataHoraInicio,
+        dataHoraFim: updatedAgendamento.dataHoraFim,
+        observacao: updatedAgendamento.observacao,
+      },
+    });
 
     return right({ agendamento: updatedAgendamento });
   }

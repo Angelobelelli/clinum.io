@@ -24,6 +24,16 @@ export class PrismaAgendamentosRepository implements AgendamentosRepository {
     return agendamento ? PrismaAgendamentoMapper.toDomain(agendamento) : null;
   }
 
+  async findByGoogleEventId(
+    googleEventId: string,
+  ): Promise<Agendamento | null> {
+    const agendamento = await this.tenantPrisma.db.agendamento.findFirst({
+      where: { googleEventId },
+    });
+
+    return agendamento ? PrismaAgendamentoMapper.toDomain(agendamento) : null;
+  }
+
   async findMany(
     filter: FindManyAgendamentosFilter,
   ): Promise<PaginatedResult<Agendamento>> {

@@ -9,6 +9,8 @@ import { ListAgendamentosUseCase } from '@/modules/agenda/application/use-cases/
 import { RevertAgendamentoUseCase } from '@/modules/agenda/application/use-cases/revert-agendamento';
 import { UpdateAgendamentoStatusUseCase } from '@/modules/agenda/application/use-cases/update-agendamento-status';
 import { UpdateAgendamentoUseCase } from '@/modules/agenda/application/use-cases/update-agendamento';
+import { AgendamentoExternalSyncTarget } from '@/modules/agenda/infra/google-calendar/agendamento-external-sync-target';
+import { AgendamentoExternalSyncTargetImpl } from '@/modules/agenda/infra/google-calendar/agendamento-external-sync-target.impl';
 import { PrismaAgendamentoAuditLogsRepository } from '@/modules/agenda/infra/database/prisma-agendamento-audit-logs-repository';
 import { PrismaAgendamentosRepository } from '@/modules/agenda/infra/database/prisma-agendamentos-repository';
 import { PrismaProfissionaisRepository } from '@/modules/agenda/infra/database/prisma-profissionais-repository';
@@ -40,6 +42,10 @@ import { ServicosModule } from '@/modules/servicos/servicos.module';
       provide: ProfissionaisRepository,
       useClass: PrismaProfissionaisRepository,
     },
+    {
+      provide: AgendamentoExternalSyncTarget,
+      useClass: AgendamentoExternalSyncTargetImpl,
+    },
     CreateAgendamentoUseCase,
     ListAgendamentosUseCase,
     UpdateAgendamentoUseCase,
@@ -47,5 +53,9 @@ import { ServicosModule } from '@/modules/servicos/servicos.module';
     UpdateAgendamentoStatusUseCase,
     RevertAgendamentoUseCase,
   ],
+  // AgendamentoExternalSyncTarget é consumido por GoogleCalendarModule
+  // (import de sentido único: google-calendar -> agenda, nunca o
+  // contrário — ver modules/google-calendar/infra/agenda-bridge/).
+  exports: [AgendamentoExternalSyncTarget],
 })
 export class AgendaModule {}

@@ -1,6 +1,7 @@
 import { makePatient } from '@/test/factories/make-patient';
 import { makeServico } from '@/test/factories/make-servico';
 import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { FakeAgendaExternalCalendarSyncPort } from '@/test/fakes/fake-agenda-external-calendar-sync-port';
 import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
 import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
 import { InMemoryProfissionaisRepository } from '@/test/repositories/in-memory-profissionais-repository';
@@ -8,6 +9,7 @@ import { InMemoryServicosRepository } from '@/test/repositories/in-memory-servic
 import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
 import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
 import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
+import { ExternalCalendarConflictError } from '@/modules/agenda/application/use-cases/errors/external-calendar-conflict-error';
 import { InvalidAgendamentoIntervalError } from '@/modules/agenda/application/use-cases/errors/invalid-agendamento-interval-error';
 import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 import { ServicoInativoError } from '@/modules/agenda/application/use-cases/errors/servico-inativo-error';
@@ -19,6 +21,7 @@ describe('UpdateAgendamentoUseCase', () => {
   let profissionaisRepository: InMemoryProfissionaisRepository;
   let patientsRepository: InMemoryPatientsRepository;
   let servicosRepository: InMemoryServicosRepository;
+  let agendaExternalCalendarSyncPort: FakeAgendaExternalCalendarSyncPort;
   let sut: UpdateAgendamentoUseCase;
 
   beforeEach(() => {
@@ -26,11 +29,13 @@ describe('UpdateAgendamentoUseCase', () => {
     profissionaisRepository = new InMemoryProfissionaisRepository();
     patientsRepository = new InMemoryPatientsRepository();
     servicosRepository = new InMemoryServicosRepository();
+    agendaExternalCalendarSyncPort = new FakeAgendaExternalCalendarSyncPort();
     sut = new UpdateAgendamentoUseCase(
       agendamentosRepository,
       profissionaisRepository,
       patientsRepository,
       servicosRepository,
+      agendaExternalCalendarSyncPort,
     );
   });
 
@@ -228,5 +233,56 @@ describe('UpdateAgendamentoUseCase', () => {
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(AgendamentoConflictError);
     }
+  });
+
+  it('retorna ExternalCalendarConflictError quando o Google Calendar indica ocupado no novo horário', async () => {
+    const agendamento = await agendamentosRepository.create(makeAgendamento());
+    agendaExternalCalendarSyncPort.busy = true;
+
+    const result = await sut.execute({
+      agendamentoId: agendamento.id.toValue(),
+      caller: { id: 'owner-1', role: 'owner' },
+      dataHoraInicio: new Date('2026-09-01T14:00:00.000Z'),
+      dataHoraFim: new Date('2026-09-01T15:00:00.000Z'),
+    });
+
+    expect(result.isLeft()).toBe(true);
+    if (result.isLeft()) {
+      expect(result.value).toBeInstanceOf(ExternalCalendarConflictError);
+    }
+  });
+
+  it('não checa o calendário externo quando só a observação muda', async () => {
+    const agendamento = await agendamentosRepository.create(makeAgendamento());
+    agendaExternalCalendarSyncPort.busy = true;
+
+    const result = await sut.execute({
+      agendamentoId: agendamento.id.toValue(),
+      caller: { id: 'owner-1', role: 'owner' },
+      observacao: 'só a observação',
+    });
+
+    expect(result.isRight()).toBe(true);
+  });
+
+  it('enfileira a sincronização externa com o profissional anterior ao remarcar para outro', async () => {
+    profissionaisRepository.existingIds.add('profissional-novo');
+    const agendamento = await agendamentosRepository.create(
+      makeAgendamento({ profissionalId: 'profissional-antigo' }),
+    );
+
+    const result = await sut.execute({
+      agendamentoId: agendamento.id.toValue(),
+      caller: { id: 'owner-1', role: 'owner' },
+      profissionalId: 'profissional-novo',
+    });
+
+    expect(result.isRight()).toBe(true);
+    expect(agendaExternalCalendarSyncPort.calls).toHaveLength(1);
+    expect(agendaExternalCalendarSyncPort.calls[0]).toMatchObject({
+      profissionalId: 'profissional-novo',
+      previousProfissionalId: 'profissional-antigo',
+      type: 'upsert',
+    });
   });
 });

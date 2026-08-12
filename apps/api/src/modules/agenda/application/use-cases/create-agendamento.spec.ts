@@ -1,12 +1,14 @@
 import { makePatient } from '@/test/factories/make-patient';
 import { makeServico } from '@/test/factories/make-servico';
 import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { FakeAgendaExternalCalendarSyncPort } from '@/test/fakes/fake-agenda-external-calendar-sync-port';
 import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
 import { InMemoryPatientsRepository } from '@/test/repositories/in-memory-patients-repository';
 import { InMemoryProfissionaisRepository } from '@/test/repositories/in-memory-profissionais-repository';
 import { InMemoryServicosRepository } from '@/test/repositories/in-memory-servicos-repository';
 import { CreateAgendamentoUseCase } from '@/modules/agenda/application/use-cases/create-agendamento';
 import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
+import { ExternalCalendarConflictError } from '@/modules/agenda/application/use-cases/errors/external-calendar-conflict-error';
 import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
 import { ServicoInativoError } from '@/modules/agenda/application/use-cases/errors/servico-inativo-error';
@@ -18,6 +20,7 @@ describe('CreateAgendamentoUseCase', () => {
   let profissionaisRepository: InMemoryProfissionaisRepository;
   let patientsRepository: InMemoryPatientsRepository;
   let servicosRepository: InMemoryServicosRepository;
+  let agendaExternalCalendarSyncPort: FakeAgendaExternalCalendarSyncPort;
   let sut: CreateAgendamentoUseCase;
 
   beforeEach(() => {
@@ -25,11 +28,13 @@ describe('CreateAgendamentoUseCase', () => {
     profissionaisRepository = new InMemoryProfissionaisRepository();
     patientsRepository = new InMemoryPatientsRepository();
     servicosRepository = new InMemoryServicosRepository();
+    agendaExternalCalendarSyncPort = new FakeAgendaExternalCalendarSyncPort();
     sut = new CreateAgendamentoUseCase(
       agendamentosRepository,
       profissionaisRepository,
       patientsRepository,
       servicosRepository,
+      agendaExternalCalendarSyncPort,
     );
   });
 
@@ -212,5 +217,46 @@ describe('CreateAgendamentoUseCase', () => {
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(AgendamentoConflictError);
     }
+  });
+
+  it('retorna ExternalCalendarConflictError quando o Google Calendar indica ocupado', async () => {
+    profissionaisRepository.existingIds.add('profissional-1');
+    const patient = await patientsRepository.create(makePatient());
+    agendaExternalCalendarSyncPort.busy = true;
+
+    const result = await sut.execute({
+      patientId: patient.id.toValue(),
+      profissionalId: 'profissional-1',
+      dataHoraInicio: new Date('2026-09-01T10:00:00.000Z'),
+      dataHoraFim: new Date('2026-09-01T11:00:00.000Z'),
+      caller: { id: 'owner-1', role: 'owner' },
+    });
+
+    expect(result.isLeft()).toBe(true);
+    if (result.isLeft()) {
+      expect(result.value).toBeInstanceOf(ExternalCalendarConflictError);
+    }
+    expect(agendamentosRepository.items).toHaveLength(0);
+  });
+
+  it('enfileira a sincronização externa após criar com sucesso', async () => {
+    profissionaisRepository.existingIds.add('profissional-1');
+    const patient = await patientsRepository.create(makePatient());
+
+    const result = await sut.execute({
+      patientId: patient.id.toValue(),
+      profissionalId: 'profissional-1',
+      dataHoraInicio: new Date('2026-09-01T10:00:00.000Z'),
+      dataHoraFim: new Date('2026-09-01T11:00:00.000Z'),
+      caller: { id: 'owner-1', role: 'owner' },
+    });
+
+    expect(result.isRight()).toBe(true);
+    expect(agendaExternalCalendarSyncPort.calls).toHaveLength(1);
+    expect(agendaExternalCalendarSyncPort.calls[0]).toMatchObject({
+      profissionalId: 'profissional-1',
+      type: 'upsert',
+      snapshot: { patientNome: patient.nome },
+    });
   });
 });

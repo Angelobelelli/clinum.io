@@ -135,6 +135,25 @@ CREATE POLICY servico_tenant_isolation ON "servico"
   WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
 
 -- -----------------------------------------------------------------------------
+-- Tabela: google_calendar_connection
+--
+-- Conexão OAuth de um profissional (Member) com o Google Calendar (ver
+-- modules/google-calendar/). Mesmo padrão de patient/agendamento/servico:
+-- acessada via tenantScopedPrismaClient — EXCETO o lookup por
+-- watchChannelId feito pelo webhook do Google, que roda antes de existir
+-- tenant resolvido e por isso usa o client cru (mesmo problema de
+-- ovo-e-galinha do TenantMiddleware com "organization", ver nota no topo
+-- deste arquivo).
+-- -----------------------------------------------------------------------------
+
+ALTER TABLE "google_calendar_connection" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "google_calendar_connection" FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY google_calendar_connection_tenant_isolation ON "google_calendar_connection"
+  USING ("organizationId" = current_setting('app.current_organization_id', true))
+  WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
+
+-- -----------------------------------------------------------------------------
 -- MODELO PARA TABELAS DE NEGÓCIO FUTURAS
 --
 -- Toda nova tabela de negócio (agenda, financeiro, etc.) deve ter uma

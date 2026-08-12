@@ -1,4 +1,5 @@
 import { makeAgendamento } from '@/test/factories/make-agendamento';
+import { FakeAgendaExternalCalendarSyncPort } from '@/test/fakes/fake-agenda-external-calendar-sync-port';
 import { InMemoryAgendamentosRepository } from '@/test/repositories/in-memory-agendamentos-repository';
 import { CancelAgendamentoUseCase } from '@/modules/agenda/application/use-cases/cancel-agendamento';
 import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
@@ -7,11 +8,16 @@ import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/e
 
 describe('CancelAgendamentoUseCase', () => {
   let agendamentosRepository: InMemoryAgendamentosRepository;
+  let agendaExternalCalendarSyncPort: FakeAgendaExternalCalendarSyncPort;
   let sut: CancelAgendamentoUseCase;
 
   beforeEach(() => {
     agendamentosRepository = new InMemoryAgendamentosRepository();
-    sut = new CancelAgendamentoUseCase(agendamentosRepository);
+    agendaExternalCalendarSyncPort = new FakeAgendaExternalCalendarSyncPort();
+    sut = new CancelAgendamentoUseCase(
+      agendamentosRepository,
+      agendaExternalCalendarSyncPort,
+    );
   });
 
   it('cancela um agendamento não terminal', async () => {
@@ -70,5 +76,23 @@ describe('CancelAgendamentoUseCase', () => {
     if (result.isLeft()) {
       expect(result.value).toBeInstanceOf(AgendamentoTerminalStateError);
     }
+  });
+
+  it('enfileira a sincronização externa de cancelamento', async () => {
+    const agendamento = await agendamentosRepository.create(makeAgendamento());
+
+    const result = await sut.execute({
+      agendamentoId: agendamento.id.toValue(),
+      caller: { id: 'owner-1', role: 'owner' },
+    });
+
+    expect(result.isRight()).toBe(true);
+    expect(agendaExternalCalendarSyncPort.calls).toEqual([
+      {
+        agendamentoId: agendamento.id.toValue(),
+        profissionalId: agendamento.profissionalId,
+        type: 'cancel',
+      },
+    ]);
   });
 });

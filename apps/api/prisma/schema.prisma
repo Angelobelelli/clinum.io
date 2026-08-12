@@ -157,6 +157,7 @@ model Organization {
   agendamentos         Agendamento[]
   agendamentoAuditLogs AgendamentoAuditLog[]
   servicos             Servico[]
+  googleCalendarConnections GoogleCalendarConnection[]
 
   @@unique([slug])
   @@unique([customDomain])
@@ -176,6 +177,7 @@ model Member {
   status      MemberStatus @default(ativo)
 
   agendamentos Agendamento[]
+  googleCalendarConnection GoogleCalendarConnection?
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -352,6 +354,19 @@ model Agendamento {
   status     AgendamentoStatus @default(agendado)
   observacao String?
 
+  // Sincronização com Google Calendar (ver modules/google-calendar/) — só
+  // preenchidos quando o profissional (Member) tem GoogleCalendarConnection
+  // ativa. googleEventId referencia o evento espelhado na agenda pessoal do
+  // profissional; syncedAt guarda o momento exato do último write feito
+  // pelo NOSSO sistema (mesmo valor gravado em
+  // extendedProperties.private.clinumSyncVersion do evento no Google) —
+  // usado como proteção contra eco ao processar notificações do webhook
+  // (ver ProcessGoogleCalendarWebhookNotificationUseCase). Campos aditivos
+  // e opcionais: agendamentos sem profissional conectado nunca os têm
+  // preenchidos.
+  googleEventId String?
+  syncedAt      DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -360,7 +375,67 @@ model Agendamento {
   @@index([organizationId])
   @@index([organizationId, profissionalId, dataHoraInicio])
   @@index([servicoId])
+  // Impede vincular o mesmo evento do Google a dois Agendamentos; NULLs não
+  // conflitam entre si no Postgres, então agendamentos sem sync convivem
+  // normalmente.
+  @@unique([organizationId, googleEventId])
+  @@index([googleEventId])
   @@map("agendamento")
+}
+
+/// Conexão OAuth de um profissional (Member) com sua conta pessoal do
+/// Google Calendar — ver modules/google-calendar/ e
+/// integrations/google-calendar/. 1 conexão por Member (memberId único: já
+/// que Member pertence a exatamente uma Organization, um unique simples em
+/// memberId é suficiente e mais forte que um composto
+/// organizationId+memberId).
+///
+/// DECISÃO DE MODELAGEM: watchChannelToken não fazia parte da lista de
+/// campos pedida originalmente — foi adicionado porque é o único jeito de
+/// autenticar a origem de uma notificação de webhook (ver
+/// GoogleCalendarWebhookController): sem ele, qualquer requisição que
+/// adivinhasse um watchChannelId conseguiria injetar processamento falso.
+///
+/// refreshTokenEncrypted NUNCA guarda o token em texto puro — ver
+/// core/crypto/token-cipher.ts (AES-256-GCM, chave em
+/// GOOGLE_TOKEN_ENCRYPTION_KEY). A entidade de domínio
+/// (GoogleCalendarConnection, enterprise/) trabalha só com o token em texto
+/// plano em memória; a criptografia acontece na borda do repositório
+/// (infra/database/mappers/), nunca em application/.
+///
+/// TENANT_SCOPED_MODELS (prisma-tenant.extension.ts): SIM. Tem RLS
+/// (rls-policies.sql). Use sempre o client tenant-scoped
+/// (TenantScopedPrismaService) — EXCETO o lookup por watchChannelId feito
+/// pelo webhook, que roda antes de existir tenant resolvido (mesmo
+/// problema de ovo-e-galinha do TenantMiddleware com "organization") e por
+/// isso usa o PrismaService cru (ver
+/// PrismaGoogleCalendarConnectionsRepository.findByWatchChannelId).
+
+model GoogleCalendarConnection {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  memberId String @unique
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  googleAccountEmail    String
+  refreshTokenEncrypted String @db.Text
+
+  calendarId String @default("primary")
+
+  watchChannelId    String?   @unique
+  watchChannelToken String?
+  watchResourceId   String?
+  watchExpiresAt    DateTime?
+
+  syncToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("google_calendar_connection")
 }
 
 /// Auditoria de TENANT da reversão de estado terminal de Agendamento (ver

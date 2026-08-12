@@ -10,6 +10,27 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(1),
   BETTER_AUTH_URL: z.string().url(),
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().optional().default(''),
+
+  // Fila (BullMQ, ver infra/queue/queue.module.ts) — primeira vez que o
+  // projeto lê Redis; já existia no .env.example (docker-compose) sem
+  // nenhum código consumindo até a integração com Google Calendar.
+  REDIS_HOST: z.string().min(1).default('localhost'),
+  REDIS_PORT: z.coerce.number().int().positive().default(6379),
+  REDIS_PASSWORD: z.string().optional(),
+
+  // Integração Google Calendar (ver modules/google-calendar/ e
+  // integrations/google-calendar/).
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
+  GOOGLE_OAUTH_REDIRECT_URI: z.string().url(),
+  // URL pública (https) usada no calendar.events.watch() — precisa de um
+  // túnel (ex: ngrok) em desenvolvimento, já que o Google precisa conseguir
+  // alcançá-la para entregar notificações de webhook.
+  GOOGLE_CALENDAR_WEBHOOK_URL: z.string().url(),
+  // Base64 de exatamente 32 bytes — chave da criptografia simétrica dos
+  // refresh tokens (ver core/crypto/token-cipher.ts). Validado no primeiro
+  // uso, não aqui (Zod não decodifica base64 nativamente).
+  GOOGLE_TOKEN_ENCRYPTION_KEY: z.string().min(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

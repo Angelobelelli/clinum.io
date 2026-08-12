@@ -17,6 +17,14 @@ export class InMemoryAgendamentosRepository implements AgendamentosRepository {
     return Promise.resolve(agendamento ?? null);
   }
 
+  findByGoogleEventId(googleEventId: string): Promise<Agendamento | null> {
+    const agendamento = this.items.find(
+      (item) => item.googleEventId === googleEventId,
+    );
+
+    return Promise.resolve(agendamento ?? null);
+  }
+
   findMany(
     filter: FindManyAgendamentosFilter,
   ): Promise<PaginatedResult<Agendamento>> {

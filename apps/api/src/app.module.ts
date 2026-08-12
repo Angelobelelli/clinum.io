@@ -10,6 +10,7 @@ import { AppService } from '@/app.service';
 import { DatabaseModule } from '@/infra/database/database.module';
 import { PermissionGuard } from '@/infra/auth/permission.guard';
 import { PrismaExceptionFilter } from '@/infra/error-handling/prisma-exception.filter';
+import { QueueModule } from '@/infra/queue/queue.module';
 import { TenantMatchGuard } from '@/infra/tenant/tenant-match.guard';
 import { TenantMiddleware } from '@/infra/tenant/tenant.middleware';
 import { OrganizationsModule } from '@/modules/organizations/organizations.module';
@@ -18,16 +19,21 @@ import { MembersModule } from '@/modules/members/members.module';
 import { PatientsModule } from '@/modules/patients/patients.module';
 import { AgendaModule } from '@/modules/agenda/agenda.module';
 import { ServicosModule } from '@/modules/servicos/servicos.module';
+import { GoogleCalendarModule } from '@/modules/google-calendar/google-calendar.module';
+import { AgendaGoogleCalendarBindingModule } from '@/modules/google-calendar/infra/agenda-bridge/agenda-google-calendar-binding.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    QueueModule,
     OrganizationsModule,
     PlatformAdminModule,
     MembersModule,
     PatientsModule,
     AgendaModule,
     ServicosModule,
+    GoogleCalendarModule,
+    AgendaGoogleCalendarBindingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -63,6 +69,16 @@ export class AppModule implements NestModule {
         // TenantMiddleware/TenantMatchGuard (ver @SkipTenantMatch no
         // controller).
         { path: 'platform-admin/{*splat}', method: RequestMethod.ALL },
+        // Callback OAuth e webhook do Google Calendar: o Google não conhece
+        // subdomínio/domínio de tenant nem manda sessão better-auth — o
+        // organizationId vem do `state` assinado (callback) ou é resolvido
+        // via watchChannelId (webhook), ver
+        // modules/google-calendar/infra/http/controllers/.
+        {
+          path: 'google-calendar/oauth/callback',
+          method: RequestMethod.GET,
+        },
+        { path: 'google-calendar/webhook', method: RequestMethod.POST },
       )
       .forRoutes('*');
   }

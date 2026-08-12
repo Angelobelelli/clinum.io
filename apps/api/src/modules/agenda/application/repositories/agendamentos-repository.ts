@@ -11,6 +11,10 @@ export interface FindManyAgendamentosFilter {
 
 export abstract class AgendamentosRepository {
   abstract findById(id: string): Promise<Agendamento | null>;
+  /** Usado pelo processamento de webhook do Google Calendar (ver modules/google-calendar/) para achar o Agendamento vinculado a um evento. */
+  abstract findByGoogleEventId(
+    googleEventId: string,
+  ): Promise<Agendamento | null>;
   abstract findMany(
     filter: FindManyAgendamentosFilter,
   ): Promise<PaginatedResult<Agendamento>>;

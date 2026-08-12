@@ -31,6 +31,10 @@ export interface AgendamentoProps {
   dataHoraFim: Date;
   status: AgendamentoStatusValue;
   observacao?: string | null;
+  // Sincronização com Google Calendar (ver modules/google-calendar/) —
+  // opcionais, só preenchidos quando o profissional tem conexão ativa.
+  googleEventId?: string | null;
+  syncedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -103,12 +107,34 @@ export class Agendamento extends Entity<AgendamentoProps> {
     this.touch();
   }
 
+  get googleEventId(): string | null | undefined {
+    return this.props.googleEventId;
+  }
+
+  get syncedAt(): Date | null | undefined {
+    return this.props.syncedAt;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
 
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  /**
+   * Vincula este Agendamento ao evento espelhado no Google Calendar e
+   * registra o momento exato do sync — mesmo valor gravado em
+   * extendedProperties.private.clinumSyncVersion do evento no Google,
+   * usado como proteção contra eco (ver
+   * ProcessGoogleCalendarWebhookNotificationUseCase). Chamado só por
+   * SyncAgendamentoToGoogleUseCase (modules/google-calendar/), nunca pela
+   * camada HTTP.
+   */
+  registrarSyncGoogle(googleEventId: string, syncedAt: Date): void {
+    this.props.googleEventId = googleEventId;
+    this.props.syncedAt = syncedAt;
   }
 
   isTerminal(): boolean {

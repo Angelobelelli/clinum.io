@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Either, left, right } from '@/core/either';
 import { Agendamento } from '@/modules/agenda/enterprise/entities/agendamento';
 import { CallerMember } from '@/modules/agenda/application/policies/agenda-ownership-policy';
+import { AgendaExternalCalendarSyncPort } from '@/modules/agenda/application/ports/agenda-external-calendar-sync';
 import { AgendamentosRepository } from '@/modules/agenda/application/repositories/agendamentos-repository';
 import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
 import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
@@ -24,6 +25,7 @@ export type CancelAgendamentoUseCaseResponse = Either<
 export class CancelAgendamentoUseCase {
   constructor(
     private readonly agendamentosRepository: AgendamentosRepository,
+    private readonly agendaExternalCalendarSyncPort: AgendaExternalCalendarSyncPort,
   ) {}
 
   async execute(
@@ -47,6 +49,14 @@ export class CancelAgendamentoUseCase {
     agendamento.status = 'cancelado';
     const updatedAgendamento =
       await this.agendamentosRepository.save(agendamento);
+
+    // Assíncrono (fila, ver modules/google-calendar/) — no-op se o
+    // profissional não tiver conexão ativa.
+    await this.agendaExternalCalendarSyncPort.enqueueSync({
+      agendamentoId: updatedAgendamento.id.toValue(),
+      profissionalId: updatedAgendamento.profissionalId,
+      type: 'cancel',
+    });
 
     return right({ agendamento: updatedAgendamento });
   }

@@ -11,6 +11,7 @@ const TENANT_SCOPED_MODELS = new Set<string>([
   'Agendamento',
   'AgendamentoAuditLog',
   'Servico',
+  'GoogleCalendarConnection',
 ]);
 
 const FILTERABLE_OPERATIONS = new Set([

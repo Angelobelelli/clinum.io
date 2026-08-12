@@ -40,6 +40,13 @@ export const statement = {
   // "activate"/"deactivate" em vez de um "update" genérico de status porque
   // são as únicas transições possíveis (ver Servico.ativar()/desativar()).
   servico: ['create', 'read', 'update', 'activate', 'deactivate'],
+  // Integração Google Calendar (modules/google-calendar/). "connect"/
+  // "disconnect" sempre agem sobre a PRÓPRIA conta do member chamador — as
+  // rotas nem recebem :memberId (ver infra/http/controllers/), então essa
+  // ação nunca precisa de uma restrição de "próprio recurso" como
+  // agendamento tem. "read" é só para listar quais profissionais da
+  // organização têm conexão ativa (owner/admin) — nunca expõe o token.
+  google_calendar: ['connect', 'disconnect', 'read'],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -72,6 +79,10 @@ export const owner = ac.newRole({
     'revert',
   ],
   servico: ['create', 'read', 'update', 'activate', 'deactivate'],
+  // Owner enxerga todas as conexões da organização, mas conectar/
+  // desconectar continua sendo só da própria conta (ver nota em
+  // "statement" acima) — owner também pode ser um profissional.
+  google_calendar: ['connect', 'disconnect', 'read'],
 });
 
 export const admin = ac.newRole({
@@ -97,6 +108,7 @@ export const admin = ac.newRole({
     'revert',
   ],
   servico: ['create', 'read', 'update', 'activate', 'deactivate'],
+  google_calendar: ['connect', 'disconnect', 'read'],
 });
 
 export const member = ac.newRole({
@@ -110,6 +122,7 @@ export const member = ac.newRole({
   patient: [],
   agendamento: [],
   servico: [],
+  google_calendar: [],
 });
 
 /**
@@ -140,6 +153,10 @@ export const staff = ac.newRole({
   // Só leitura: staff usa o catálogo pra saber duração/preço do
   // atendimento, mas quem administra o catálogo é owner/admin.
   servico: ['read'],
+  // Staff é quem de fato conecta a própria agenda pessoal — SEM "read"
+  // (listar conexões de outros profissionais da organização é só
+  // owner/admin, ver nota em "statement" acima).
+  google_calendar: ['connect', 'disconnect'],
 });
 
 /**
@@ -167,6 +184,10 @@ export const reception = ac.newRole({
   agendamento: ['create', 'read', 'update', 'cancel'],
   // Mesmo racional de staff: usa o catálogo pra agendar, não administra.
   servico: ['read'],
+  // Reception não é profissional — não conecta a própria conta nem vê
+  // conexões de terceiros. Não especificado explicitamente no pedido
+  // original, decisão de modelagem documentada aqui.
+  google_calendar: [],
 });
 
 /**

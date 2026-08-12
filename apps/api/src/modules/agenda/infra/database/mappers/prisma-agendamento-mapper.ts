@@ -17,6 +17,8 @@ export class PrismaAgendamentoMapper {
         dataHoraFim: raw.dataHoraFim,
         status: raw.status,
         observacao: raw.observacao,
+        googleEventId: raw.googleEventId,
+        syncedAt: raw.syncedAt,
         createdAt: raw.createdAt,
         updatedAt: raw.updatedAt,
       },
@@ -53,6 +55,8 @@ export class PrismaAgendamentoMapper {
       dataHoraFim: agendamento.dataHoraFim,
       status: agendamento.status,
       observacao: agendamento.observacao,
+      googleEventId: agendamento.googleEventId,
+      syncedAt: agendamento.syncedAt,
     };
   }
 }

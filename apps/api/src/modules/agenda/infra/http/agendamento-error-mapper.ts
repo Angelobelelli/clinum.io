@@ -11,6 +11,7 @@ import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases
 import { AgendamentoNotFoundError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-found-error';
 import { AgendamentoNotTerminalError } from '@/modules/agenda/application/use-cases/errors/agendamento-not-terminal-error';
 import { AgendamentoTerminalStateError } from '@/modules/agenda/application/use-cases/errors/agendamento-terminal-state-error';
+import { ExternalCalendarConflictError } from '@/modules/agenda/application/use-cases/errors/external-calendar-conflict-error';
 import { InvalidAgendamentoIntervalError } from '@/modules/agenda/application/use-cases/errors/invalid-agendamento-interval-error';
 import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
@@ -45,7 +46,8 @@ export function agendamentoErrorToHttpException(error: Error): HttpException {
     error instanceof AgendamentoConflictError ||
     error instanceof AgendamentoTerminalStateError ||
     error instanceof AgendamentoNotTerminalError ||
-    error instanceof ServicoInativoError
+    error instanceof ServicoInativoError ||
+    error instanceof ExternalCalendarConflictError
   ) {
     return new ConflictException(error.message);
   }

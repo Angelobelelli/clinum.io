@@ -11,9 +11,11 @@ import {
   CallerMember,
   isOwnResource,
 } from '@/modules/agenda/application/policies/agenda-ownership-policy';
+import { AgendaExternalCalendarSyncPort } from '@/modules/agenda/application/ports/agenda-external-calendar-sync';
 import { AgendamentosRepository } from '@/modules/agenda/application/repositories/agendamentos-repository';
 import { ProfissionaisRepository } from '@/modules/agenda/application/repositories/profissionais-repository';
 import { AgendamentoConflictError } from '@/modules/agenda/application/use-cases/errors/agendamento-conflict-error';
+import { ExternalCalendarConflictError } from '@/modules/agenda/application/use-cases/errors/external-calendar-conflict-error';
 import { NotOwnAgendamentoError } from '@/modules/agenda/application/use-cases/errors/not-own-agendamento-error';
 import { ProfissionalNotFoundError } from '@/modules/agenda/application/use-cases/errors/profissional-not-found-error';
 import { ServicoInativoError } from '@/modules/agenda/application/use-cases/errors/servico-inativo-error';
@@ -43,7 +45,8 @@ export type CreateAgendamentoUseCaseResponse = Either<
   | PatientNotFoundError
   | ServicoNotFoundError
   | ServicoInativoError
-  | AgendamentoConflictError,
+  | AgendamentoConflictError
+  | ExternalCalendarConflictError,
   { agendamento: Agendamento }
 >;
 
@@ -54,6 +57,7 @@ export class CreateAgendamentoUseCase {
     private readonly profissionaisRepository: ProfissionaisRepository,
     private readonly patientsRepository: PatientsRepository,
     private readonly servicosRepository: ServicosRepository,
+    private readonly agendaExternalCalendarSyncPort: AgendaExternalCalendarSyncPort,
   ) {}
 
   async execute(
@@ -77,6 +81,7 @@ export class CreateAgendamentoUseCase {
     }
 
     let dataHoraFim: Date;
+    let servicoNome: string | undefined;
     if (request.servicoId !== undefined) {
       const servico = await this.servicosRepository.findById(request.servicoId);
       if (!servico) {
@@ -89,6 +94,7 @@ export class CreateAgendamentoUseCase {
         request.dataHoraInicio,
         servico.duracaoMinutos,
       );
+      servicoNome = servico.nome;
     } else {
       dataHoraFim = request.dataHoraFim!;
     }
@@ -108,6 +114,19 @@ export class CreateAgendamentoUseCase {
       return left(new AgendamentoConflictError());
     }
 
+    // Free/Busy do calendário externo (ver AgendaExternalCalendarSyncPort) —
+    // no-op (sempre false) se o profissional não tiver conexão ativa com o
+    // Google Calendar.
+    const conflitoExterno =
+      await this.agendaExternalCalendarSyncPort.checkFreeBusyConflict({
+        profissionalId: request.profissionalId,
+        dataHoraInicio: request.dataHoraInicio,
+        dataHoraFim,
+      });
+    if (conflitoExterno) {
+      return left(new ExternalCalendarConflictError());
+    }
+
     const agendamento = Agendamento.create({
       organizationId: ORGANIZATION_ID_PLACEHOLDER,
       servicoId: request.servicoId,
@@ -120,6 +139,21 @@ export class CreateAgendamentoUseCase {
 
     const createdAgendamento =
       await this.agendamentosRepository.create(agendamento);
+
+    // Assíncrono (fila, ver modules/google-calendar/) — no-op se o
+    // profissional não tiver conexão ativa. Nunca bloqueia a resposta HTTP.
+    await this.agendaExternalCalendarSyncPort.enqueueSync({
+      agendamentoId: createdAgendamento.id.toValue(),
+      profissionalId: createdAgendamento.profissionalId,
+      type: 'upsert',
+      snapshot: {
+        patientNome: patient.nome,
+        servicoNome,
+        dataHoraInicio: createdAgendamento.dataHoraInicio,
+        dataHoraFim: createdAgendamento.dataHoraFim,
+        observacao: createdAgendamento.observacao,
+      },
+    });
 
     return right({ agendamento: createdAgendamento });
   }
