@@ -99,8 +99,6 @@ export class SyncAgendamentoToGoogleUseCase {
     existingGoogleEventId: string | null | undefined,
     snapshot: NonNullable<EnqueueAgendaExternalSyncParams['snapshot']>,
   ): Promise<void> {
-    const syncVersionIso = new Date().toISOString();
-
     const { googleEventId } = await this.gateway.upsertEvent({
       refreshToken: connection.refreshToken,
       calendarId: connection.calendarId,
@@ -111,14 +109,19 @@ export class SyncAgendamentoToGoogleUseCase {
         dataHoraInicio: snapshot.dataHoraInicio,
         dataHoraFim: snapshot.dataHoraFim,
         agendamentoId,
-        syncVersionIso,
       },
     });
 
+    // Capturado DEPOIS do Google confirmar o write de propósito: o campo
+    // `updated` que o Google atribui a este evento é registrado pelo
+    // servidor deles ANTES de nos responder — syncedAt (nosso relógio,
+    // sempre um pouco depois) fica garantidamente >= updatedIso do nosso
+    // próprio write, o que a proteção contra eco depende (ver
+    // ProcessGoogleCalendarWebhookNotificationUseCase).
     await this.syncTarget.linkGoogleEvent({
       agendamentoId,
       googleEventId,
-      syncedAt: new Date(syncVersionIso),
+      syncedAt: new Date(),
     });
   }
 

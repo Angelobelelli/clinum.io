@@ -96,13 +96,20 @@ export class ProcessGoogleCalendarWebhookNotificationUseCase {
       return;
     }
 
-    // Proteção contra eco: a mudança carrega a MESMA versão que o nosso
-    // último write gravou em Agendamento.syncedAt — é eco do nosso próprio
-    // sync, não uma edição externa.
+    // Proteção contra eco: `change.updatedIso` é o timestamp de última
+    // modificação que o PRÓPRIO GOOGLE mantém para o evento — se ele não é
+    // mais recente que o nosso último write (Agendamento.syncedAt,
+    // registrado depois do Google confirmar esse write, ver
+    // SyncAgendamentoToGoogleUseCase), esta notificação é sobre o nosso
+    // próprio sync, não uma edição feita depois por fora. Comparar contra
+    // um marcador estático gravado em extendedProperties (tentativa
+    // anterior) não funcionava: editar horário/título não toca
+    // extendedProperties, então o marcador nunca mudava entre o nosso
+    // write e uma edição externa seguinte — a mudança externa nunca era
+    // detectada.
     if (
-      change.syncVersionIso &&
       agendamento.syncedAt &&
-      change.syncVersionIso === agendamento.syncedAt.toISOString()
+      new Date(change.updatedIso) <= agendamento.syncedAt
     ) {
       return;
     }

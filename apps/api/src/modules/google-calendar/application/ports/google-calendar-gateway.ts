@@ -1,6 +1,6 @@
 /**
  * Porta que os use-cases de modules/google-calendar/ consomem — vocabulário
- * de NEGÓCIO (Agendamento, syncVersion), diferente dos tipos genéricos de
+ * de NEGÓCIO (Agendamento), diferente dos tipos genéricos de
  * integrations/google-calendar/. Implementada por
  * infra/gateways/google-calendar-gateway.impl.ts, que traduz entre os dois
  * mundos.
@@ -12,14 +12,6 @@ export interface GoogleCalendarEventData {
   dataHoraInicio: Date;
   dataHoraFim: Date;
   agendamentoId: string;
-  /**
-   * ISO exato — o MESMO valor que o chamador vai persistir em
-   * Agendamento.syncedAt logo em seguida. Gravado em
-   * extendedProperties.private do evento no Google e comparado depois pelo
-   * processamento do webhook (proteção contra eco, ver
-   * ProcessGoogleCalendarWebhookNotificationUseCase).
-   */
-  syncVersionIso: string;
 }
 
 export interface GoogleCalendarChangedEvent {
@@ -29,7 +21,18 @@ export interface GoogleCalendarChangedEvent {
   dataHoraFim?: Date;
   /** Ausente se o evento não tiver sido criado por nós (extendedProperties.private ausente). */
   agendamentoId?: string;
-  syncVersionIso?: string;
+  /**
+   * Timestamp de última modificação do evento NO GOOGLE (campo `updated`
+   * da API) — não é algo que nós escrevemos, é o próprio Google quem
+   * mantém. Usado para proteção contra eco (ver
+   * ProcessGoogleCalendarWebhookNotificationUseCase): editar campos comuns
+   * do evento (horário, por exemplo) não altera extendedProperties, então
+   * um marcador estático gravado por nós nunca serviria para distinguir
+   * "isto é o eco do nosso último write" de "isto é uma edição externa
+   * mais recente" — só o `updated` do próprio Google muda a cada edição,
+   * nossa ou de terceiros.
+   */
+  updatedIso: string;
 }
 
 export interface GoogleCalendarChangesResult {

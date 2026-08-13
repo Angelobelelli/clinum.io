@@ -23,6 +23,18 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
   async process(job: Job<GoogleCalendarSyncJobPayload>): Promise<void> {
     const { organizationId, ...payload } = job.data;
 
+    // BullMQ serializa o payload do job como JSON no Redis — dataHoraInicio/
+    // dataHoraFim chegam aqui como string (ISO), não como Date. Reconstrói
+    // antes de chamar o use-case, que espera Date de verdade (mesmo tipo
+    // usado nos testes unitários, que nunca passam pelo round-trip JSON).
+    if (payload.snapshot) {
+      payload.snapshot = {
+        ...payload.snapshot,
+        dataHoraInicio: new Date(payload.snapshot.dataHoraInicio),
+        dataHoraFim: new Date(payload.snapshot.dataHoraFim),
+      };
+    }
+
     return runWithTenantContext({ organizationId }, () =>
       this.syncAgendamentoToGoogleUseCase.execute(payload),
     );

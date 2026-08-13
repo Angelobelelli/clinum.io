@@ -5,11 +5,21 @@ import { env } from '@/core/env/env';
 import type { GoogleOAuthTokens } from '@/integrations/google-calendar/google-calendar-integration.types';
 
 /**
- * Único escopo necessário: leitura/escrita de eventos do calendário do
+ * Escopo de calendário: leitura/escrita de eventos do calendário do
  * profissional. Sem escopo de configurações da conta, sem readonly (a
  * sincronização é bidirecional).
  */
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
+
+/**
+ * Escopo de identidade — necessário só para o GET /oauth2/v2/userinfo em
+ * exchangeCodeForTokens (usado pra preencher
+ * GoogleCalendarConnection.googleAccountEmail). Sem ele, o access token
+ * emitido não tem autorização pra chamar o endpoint de userinfo (401
+ * "missing required authentication credential"), mesmo com o code trocado
+ * com sucesso.
+ */
+const USERINFO_EMAIL_SCOPE = 'https://www.googleapis.com/auth/userinfo.email';
 
 /**
  * Wrapper fino sobre OAuth2Client (google-auth-library) — fluxo de
@@ -35,7 +45,7 @@ export class GoogleOAuthClient {
       // reconexão após revogar acesso manualmente no Google não traria um
       // refresh_token novo.
       prompt: 'consent',
-      scope: [CALENDAR_SCOPE],
+      scope: [CALENDAR_SCOPE, USERINFO_EMAIL_SCOPE],
       state,
     });
   }

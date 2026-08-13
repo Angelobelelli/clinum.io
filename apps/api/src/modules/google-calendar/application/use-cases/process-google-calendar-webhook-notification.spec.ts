@@ -35,7 +35,7 @@ describe('ProcessGoogleCalendarWebhookNotificationUseCase', () => {
         {
           googleEventId: 'evento-solto',
           status: 'confirmed',
-          updatedIso: new Date().toISOString(),
+          updatedIso: new Date('2026-09-01T10:00:00.000Z').toISOString(),
         },
       ],
       nextSyncToken: 'novo-sync-token',
@@ -60,7 +60,7 @@ describe('ProcessGoogleCalendarWebhookNotificationUseCase', () => {
           googleEventId: 'evento-1',
           status: 'confirmed',
           agendamentoId: agendamento.id.toValue(),
-          syncVersionIso: syncedAt.toISOString(),
+          // updatedIso não é mais recente que o nosso último syncedAt -> eco.
           updatedIso: syncedAt.toISOString(),
         },
       ],
@@ -89,11 +89,10 @@ describe('ProcessGoogleCalendarWebhookNotificationUseCase', () => {
           googleEventId: 'evento-1',
           status: 'confirmed',
           agendamentoId: agendamento.id.toValue(),
-          // syncVersionIso diferente do syncedAt atual -> mudança externa genuína.
-          syncVersionIso: new Date('2026-09-01T13:00:00.000Z').toISOString(),
           dataHoraInicio: novoInicio,
           dataHoraFim: novoFim,
-          updatedIso: new Date().toISOString(),
+          // updatedIso mais recente que o nosso último syncedAt (09:00) -> mudança externa genuína.
+          updatedIso: new Date('2026-09-01T13:00:00.000Z').toISOString(),
         },
       ],
     };
@@ -120,7 +119,8 @@ describe('ProcessGoogleCalendarWebhookNotificationUseCase', () => {
           googleEventId: 'evento-1',
           status: 'cancelled',
           agendamentoId: agendamento.id.toValue(),
-          updatedIso: new Date().toISOString(),
+          // updatedIso mais recente que o nosso último syncedAt (09:00) -> mudança externa genuína.
+          updatedIso: new Date('2026-09-01T10:00:00.000Z').toISOString(),
         },
       ],
     };

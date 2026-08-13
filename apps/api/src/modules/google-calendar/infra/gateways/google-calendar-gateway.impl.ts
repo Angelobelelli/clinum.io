@@ -11,9 +11,8 @@ import {
   GoogleCalendarGateway,
 } from '@/modules/google-calendar/application/ports/google-calendar-gateway';
 
-/** Chaves gravadas em extendedProperties.private do evento no Google — ver GoogleCalendarEventData. */
+/** Chave gravada em extendedProperties.private do evento no Google — ver GoogleCalendarEventData. */
 const AGENDAMENTO_ID_PROPERTY = 'clinumAgendamentoId';
-const SYNC_VERSION_PROPERTY = 'clinumSyncVersion';
 
 @Injectable()
 export class GoogleCalendarGatewayImpl extends GoogleCalendarGateway {
@@ -64,7 +63,6 @@ export class GoogleCalendarGatewayImpl extends GoogleCalendarGateway {
       endIso: params.event.dataHoraFim.toISOString(),
       extendedPrivateProperties: {
         [AGENDAMENTO_ID_PROPERTY]: params.event.agendamentoId,
-        [SYNC_VERSION_PROPERTY]: params.event.syncVersionIso,
       },
     };
 
@@ -159,8 +157,7 @@ export class GoogleCalendarGatewayImpl extends GoogleCalendarGateway {
         dataHoraFim: change.endIso ? new Date(change.endIso) : undefined,
         agendamentoId:
           change.extendedPrivateProperties?.[AGENDAMENTO_ID_PROPERTY],
-        syncVersionIso:
-          change.extendedPrivateProperties?.[SYNC_VERSION_PROPERTY],
+        updatedIso: change.updatedIso,
       })),
       nextSyncToken: page.nextSyncToken,
     };
